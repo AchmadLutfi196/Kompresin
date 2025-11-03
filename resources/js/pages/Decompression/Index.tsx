@@ -3,6 +3,7 @@ import { Link, Head } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import StatsCard from '@/components/Compression/StatsCard';
 import ImagePreview from '@/components/Compression/ImagePreview';
+import AppHeader from '@/components/AppHeader';
 
 interface DecompressionResult {
     decompressed_image_url: string;
@@ -24,8 +25,10 @@ export default function Index() {
         if (!file) return;
 
         // Validate file extension
-        if (!file.name.endsWith('.bin')) {
-            setError('Format file tidak valid. Gunakan file .bin hasil kompresi.');
+        const validExtensions = ['.bin', '.txt', '.json', '.zip'];
+        const hasValidExtension = validExtensions.some(ext => file.name.endsWith(ext));
+        if (!hasValidExtension) {
+            setError('Format file tidak valid. Gunakan file hasil kompresi (.bin, .txt, .json, atau .zip).');
             return;
         }
 
@@ -89,31 +92,8 @@ export default function Index() {
         <>
             <Head title="Dekompresi Gambar" />
             
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800">
-                {/* Header */}
-                <header className="bg-white dark:bg-gray-800 shadow-sm">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                        <div className="flex items-center justify-between">
-                            <Link href="/" className="text-xl font-bold text-gray-900 dark:text-white">
-                                ← Kembali
-                            </Link>
-                            <div className="flex items-center space-x-4">
-                                <Link
-                                    href="/compress"
-                                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                                >
-                                    Kompresi
-                                </Link>
-                                <Link
-                                    href="/history"
-                                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                                >
-                                    Riwayat
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-                </header>
+            <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-gray-900 dark:to-gray-800">
+                <AppHeader currentPage="decompress" showBackButton />
 
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <motion.div

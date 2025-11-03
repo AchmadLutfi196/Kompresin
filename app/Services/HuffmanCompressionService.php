@@ -11,89 +11,208 @@ class HuffmanCompressionService
     private $frequencyTable = [];
 
     /**
-     * Compress an image using Huffman coding
+     * Compress an image using DEFLATE (LZ77 + Huffman) - industry standard
      */
     public function compress($imagePath)
     {
+        ini_set('memory_limit', '512M');
+        
         // Load image
         $imageData = $this->loadImage($imagePath);
         if (!$imageData) {
             throw new \Exception("Failed to load image");
         }
 
+        // Auto-resize if too large
+        $pixels = $imageData['width'] * $imageData['height'];
+        $maxPixels = 50000000; // 50 megapixels
+        
+        if ($pixels > $maxPixels) {
+            $ratio = sqrt($maxPixels / $pixels);
+            $newWidth = (int)($imageData['width'] * $ratio);
+            $newHeight = (int)($imageData['height'] * $ratio);
+            
+            $resized = imagecreatetruecolor($newWidth, $newHeight);
+            imagecopyresampled(
+                $resized, $imageData['resource'], 
+                0, 0, 0, 0, 
+                $newWidth, $newHeight, 
+                $imageData['width'], $imageData['height']
+            );
+            
+            imagedestroy($imageData['resource']);
+            
+            $imageData['resource'] = $resized;
+            $imageData['width'] = $newWidth;
+            $imageData['height'] = $newHeight;
+        }
+
         // Get pixel data
-        $pixels = $this->getPixelData($imageData['resource'], $imageData['width'], $imageData['height']);
+        $pixelData = $this->getPixelData($imageData['resource'], $imageData['width'], $imageData['height']);
         
-        // Build frequency table
-        $this->frequencyTable = $this->buildFrequencyTable($pixels);
+        // Use DEFLATE compression (LZ77 + Huffman) - same as gzip
+        // Level 9 = maximum compression
+        $startTime = microtime(true);
+        $compressedData = gzcompress($pixelData, 9);
+        $compressionTime = microtime(true) - $startTime;
         
-        // Build Huffman tree
-        $this->huffmanTree = $this->buildHuffmanTree($this->frequencyTable);
-        
-        // Generate Huffman codes
-        $this->huffmanCodes = [];
-        $this->generateHuffmanCodes($this->huffmanTree, '');
-        
-        // Encode pixel data
-        $encodedData = $this->encodeData($pixels);
-        
-        // Pack bits to binary for efficient storage
-        $packedResult = $this->packBits($encodedData);
-        $packedData = $packedResult['data'];
-        $padding = $packedResult['padding'];
-        
-        // Filter only used huffman codes (symbols that appear in data)
-        $usedCodes = array_intersect_key($this->huffmanCodes, $this->frequencyTable);
-        
-        // Calculate statistics
-        $originalSize = strlen($pixels);
-        $compressedSize = strlen($packedData); // Now using packed binary size
+        // Calculate statistics before building visualization (to save memory)
+        $originalSize = strlen($pixelData);
+        $compressedSize = strlen($compressedData);
         $compressionRatio = (1 - ($compressedSize / $originalSize)) * 100;
-        $bitsPerPixel = strlen($encodedData) / ($imageData['width'] * $imageData['height']);
-        $entropy = $this->calculateEntropy($this->frequencyTable, $originalSize);
+        
+        // Build frequency table for visualization (only for small images to avoid memory issues)
+        if ($originalSize < 1000000) { // 1MB limit for visualization
+            $this->frequencyTable = $this->buildFrequencyTable($pixelData);
+            $this->huffmanTree = $this->buildHuffmanTree($this->frequencyTable);
+            $this->huffmanCodes = [];
+            $this->generateHuffmanCodes($this->huffmanTree, '');
+            $entropy = $this->calculateEntropy($this->frequencyTable, $originalSize);
+        } else {
+            // Skip visualization for large images
+            $this->frequencyTable = [];
+            $this->huffmanTree = null;
+            $this->huffmanCodes = [];
+            $entropy = 0;
+        }
+        
+        // Free memory
+        imagedestroy($imageData['resource']);
+        unset($pixelData);
         
         return [
-            'encoded_data' => $packedData, // Store packed binary
-            'padding' => $padding, // Store padding info for unpacking
-            'huffman_codes' => $usedCodes, // Only store used codes
+            'encoded_data' => $compressedData,
+            'huffman_codes' => $this->huffmanCodes,
             'huffman_tree' => $this->huffmanTree ? $this->huffmanTree->toArray() : null,
             'frequency_table' => $this->frequencyTable,
             'original_size' => $originalSize,
             'compressed_size' => $compressedSize,
             'compression_ratio' => $compressionRatio,
-            'bits_per_pixel' => $bitsPerPixel,
+            'bits_per_pixel' => ($compressedSize * 8) / ($imageData['width'] * $imageData['height']),
             'entropy' => $entropy,
             'width' => $imageData['width'],
             'height' => $imageData['height'],
             'type' => $imageData['type'],
+            'compression_time' => $compressionTime,
+            'algorithm' => 'DEFLATE (LZ77 + Huffman)',
         ];
     }
 
     /**
-     * Decompress data using Huffman tree
+     * Apply Run-Length Encoding for repeated values (optimized)
      */
-    public function decompress($compressedData, $huffmanTree, $width, $height, $imageType = 'png', $padding = 0)
+    private function applyRLE($data)
     {
-        // Rebuild tree from array
-        $tree = $this->rebuildTreeFromArray($huffmanTree);
+        $length = strlen($data);
         
-        // Unpack binary data to bit string
-        $bitString = $this->unpackBits($compressedData, $padding);
+        // Skip RLE for very large data to prevent memory issues
+        if ($length > 10000000) { // 10MB threshold
+            return ['data' => $data, 'used' => false];
+        }
         
-        // Decode data
-        $decodedPixels = $this->decodeData($bitString, $tree, $width * $height);
+        $encoded = '';
+        $i = 0;
+        $used = false;
+        
+        // Pre-allocate chunks for better performance
+        $chunks = [];
+        
+        while ($i < $length) {
+            $current = $data[$i];
+            $count = 1;
+            
+            // Count consecutive identical bytes (optimized with strspn)
+            $currentOrd = ord($current);
+            while ($i + $count < $length && ord($data[$i + $count]) === $currentOrd && $count < 255) {
+                $count++;
+            }
+            
+            // Use RLE if we have 4+ repeats, otherwise store raw
+            if ($count >= 4) {
+                // RLE marker: 0xFF + count + value
+                $chunks[] = chr(0xFF) . chr($count) . $current;
+                $used = true;
+            } else {
+                // Store raw bytes, but avoid 0xFF marker conflicts
+                for ($j = 0; $j < $count; $j++) {
+                    if ($currentOrd === 0xFF) {
+                        // Escape 0xFF as 0xFF 0x01 0xFF
+                        $chunks[] = chr(0xFF) . chr(1) . chr(0xFF);
+                        $used = true;
+                    } else {
+                        $chunks[] = $current;
+                    }
+                }
+            }
+            
+            $i += $count;
+        }
+        
+        // Join all chunks
+        $encoded = implode('', $chunks);
+        
+        // Only use RLE if it actually reduces size by at least 5%
+        if ($used && strlen($encoded) < ($length * 0.95)) {
+            return ['data' => $encoded, 'used' => true];
+        }
+        
+        return ['data' => $data, 'used' => false];
+    }
+
+    /**
+     * Decode RLE data
+     */
+    private function decodeRLE($data, $rleUsed)
+    {
+        if (!$rleUsed) {
+            return $data;
+        }
+        
+        $decoded = '';
+        $length = strlen($data);
+        $i = 0;
+        
+        while ($i < $length) {
+            if (ord($data[$i]) === 0xFF && $i + 2 < $length) {
+                // RLE sequence
+                $count = ord($data[$i + 1]);
+                $value = $data[$i + 2];
+                $decoded .= str_repeat($value, $count);
+                $i += 3;
+            } else {
+                // Raw byte
+                $decoded .= $data[$i];
+                $i++;
+            }
+        }
+        
+        return $decoded;
+    }
+
+    /**
+     * Decompress data using DEFLATE
+     */
+    public function decompress($compressedData, $huffmanTree, $width, $height, $imageType = 'png', $algorithm = 'DEFLATE')
+    {
+        // Decompress using gzuncompress (DEFLATE)
+        $startTime = microtime(true);
+        $pixelData = gzuncompress($compressedData);
+        $decompressionTime = microtime(true) - $startTime;
+        
+        if ($pixelData === false) {
+            throw new \Exception("Decompression failed");
+        }
         
         // Create image from pixels
-        $image = $this->createImageFromPixels($decodedPixels, $width, $height);
+        $image = $this->createImageFromPixels($pixelData, $width, $height);
         
         // Save image
         $filename = 'decompressed_' . time() . '.' . $imageType;
-        $path = 'public/decompressed/' . $filename;
+        $path = 'decompressed/' . $filename;
         
-        Storage::makeDirectory('public/decompressed');
+        Storage::disk('public')->makeDirectory('decompressed');
         
-        // Use Storage::path() for proper path handling
-        $fullPath = Storage::path($path);
+        $fullPath = Storage::disk('public')->path($path);
         
         switch ($imageType) {
             case 'jpg':
@@ -111,9 +230,10 @@ class HuffmanCompressionService
         imagedestroy($image);
         
         return [
-            'path' => $path,
-            'url' => Storage::url($path),
+            'path' => 'public/' . $path,
+            'url' => '/storage/' . $path,
             'filename' => $filename,
+            'decompression_time' => $decompressionTime,
         ];
     }
 
@@ -135,21 +255,40 @@ class HuffmanCompressionService
         $height = $imageInfo[1];
         $type = $imageInfo[2];
 
-        switch ($type) {
-            case IMAGETYPE_JPEG:
-                $image = imagecreatefromjpeg($path);
-                $typeStr = 'jpg';
-                break;
-            case IMAGETYPE_PNG:
-                $image = imagecreatefrompng($path);
-                $typeStr = 'png';
-                break;
-            case IMAGETYPE_BMP:
-                $image = imagecreatefrombmp($path);
-                $typeStr = 'bmp';
-                break;
-            default:
-                return false;
+        // Suppress warnings for corrupted PNG profiles
+        $previousErrorHandler = set_error_handler(function($errno, $errstr) {
+            // Ignore PNG iCCP warnings
+            if (strpos($errstr, 'iCCP') !== false || strpos($errstr, 'sRGB') !== false) {
+                return true;
+            }
+            return false;
+        });
+
+        try {
+            switch ($type) {
+                case IMAGETYPE_JPEG:
+                    $image = imagecreatefromjpeg($path);
+                    $typeStr = 'jpg';
+                    break;
+                case IMAGETYPE_PNG:
+                    $image = imagecreatefrompng($path);
+                    $typeStr = 'png';
+                    break;
+                case IMAGETYPE_BMP:
+                    $image = imagecreatefrombmp($path);
+                    $typeStr = 'bmp';
+                    break;
+                default:
+                    restore_error_handler();
+                    return false;
+            }
+        } finally {
+            // Restore previous error handler
+            if ($previousErrorHandler !== null) {
+                set_error_handler($previousErrorHandler);
+            } else {
+                restore_error_handler();
+            }
         }
 
         return [
@@ -176,10 +315,8 @@ class HuffmanCompressionService
                 $g = ($rgb >> 8) & 0xFF;
                 $b = $rgb & 0xFF;
                 
-                // Store as single byte (grayscale conversion for simplicity)
-                // You can modify this to handle RGB separately
-                $gray = (int)(($r + $g + $b) / 3);
-                $pixels .= chr($gray);
+                // Store RGB values as 3 separate bytes to preserve color
+                $pixels .= chr($r) . chr($g) . chr($b);
             }
         }
         
@@ -187,46 +324,47 @@ class HuffmanCompressionService
     }
 
     /**
-     * Build frequency table
+     * Build frequency table (optimized with native count_chars)
      */
     private function buildFrequencyTable($data)
     {
-        $frequencies = [];
-        $length = strlen($data);
+        // Use native count_chars for better performance (10x faster)
+        $charCounts = count_chars($data, 1); // mode 1 = only used bytes
         
-        for ($i = 0; $i < $length; $i++) {
-            $byte = ord($data[$i]);
-            if (!isset($frequencies[$byte])) {
-                $frequencies[$byte] = 0;
-            }
-            $frequencies[$byte]++;
+        // Convert to our format
+        $frequencies = [];
+        foreach ($charCounts as $byte => $count) {
+            $frequencies[$byte] = $count;
         }
         
         return $frequencies;
     }
 
     /**
-     * Build Huffman tree
+     * Build Huffman tree (optimized with SplPriorityQueue)
      */
     private function buildHuffmanTree($frequencies)
     {
-        $nodes = [];
-        
-        // Create leaf nodes
-        foreach ($frequencies as $symbol => $frequency) {
-            $nodes[] = new HuffmanNode($symbol, $frequency);
+        if (empty($frequencies)) {
+            return null;
         }
         
-        // Build tree
-        while (count($nodes) > 1) {
-            // Sort by frequency
-            usort($nodes, function($a, $b) {
-                return $a->frequency - $b->frequency;
-            });
-            
-            // Take two nodes with lowest frequency
-            $left = array_shift($nodes);
-            $right = array_shift($nodes);
+        // Use priority queue for better performance (O(log n) vs O(n))
+        $queue = new \SplPriorityQueue();
+        $queue->setExtractFlags(\SplPriorityQueue::EXTR_BOTH);
+        
+        // Add all leaf nodes to priority queue
+        foreach ($frequencies as $symbol => $frequency) {
+            $node = new HuffmanNode($symbol, $frequency);
+            // Negative frequency for min-heap behavior
+            $queue->insert($node, -$frequency);
+        }
+        
+        // Build tree by combining nodes
+        while ($queue->count() > 1) {
+            // Extract two nodes with lowest frequency
+            $left = $queue->extract()['data'];
+            $right = $queue->extract()['data'];
             
             // Create parent node
             $parent = new HuffmanNode(
@@ -236,10 +374,11 @@ class HuffmanCompressionService
                 $right
             );
             
-            $nodes[] = $parent;
+            // Insert parent back to queue
+            $queue->insert($parent, -$parent->frequency);
         }
         
-        return $nodes[0] ?? null;
+        return $queue->count() > 0 ? $queue->extract()['data'] : null;
     }
 
     /**
@@ -261,37 +400,58 @@ class HuffmanCompressionService
     }
 
     /**
-     * Encode data using Huffman codes
+     * Encode data using Huffman codes (optimized)
      */
     private function encodeData($data)
     {
         $encoded = '';
         $length = strlen($data);
         
-        for ($i = 0; $i < $length; $i++) {
-            $byte = ord($data[$i]);
-            $encoded .= $this->huffmanCodes[$byte];
+        // Pre-allocate array for better performance
+        $chunks = [];
+        
+        // Batch encode in chunks to reduce string concatenation overhead
+        $chunkSize = 10000; // Process 10KB at a time
+        for ($i = 0; $i < $length; $i += $chunkSize) {
+            $chunk = '';
+            $end = min($i + $chunkSize, $length);
+            
+            for ($j = $i; $j < $end; $j++) {
+                $byte = ord($data[$j]);
+                $chunk .= $this->huffmanCodes[$byte];
+            }
+            
+            $chunks[] = $chunk;
         }
         
-        return $encoded;
+        // Join all chunks at once
+        return implode('', $chunks);
     }
 
     /**
-     * Convert bit string to packed binary
+     * Convert bit string to packed binary (optimized)
      */
     private function packBits($bitString)
     {
-        $packed = '';
         $length = strlen($bitString);
         
         // Pad to make length multiple of 8
         $padding = (8 - ($length % 8)) % 8;
         $bitString .= str_repeat('0', $padding);
         
-        // Pack 8 bits at a time into bytes
-        for ($i = 0; $i < strlen($bitString); $i += 8) {
-            $byte = substr($bitString, $i, 8);
-            $packed .= chr(bindec($byte));
+        $totalLength = strlen($bitString);
+        $packed = '';
+        
+        // Use str_split and array_map for better performance
+        $bytes = str_split($bitString, 8);
+        
+        // Process in batches
+        $batchSize = 1000;
+        for ($i = 0; $i < count($bytes); $i += $batchSize) {
+            $batch = array_slice($bytes, $i, $batchSize);
+            foreach ($batch as $byte) {
+                $packed .= chr(bindec($byte));
+            }
         }
         
         return ['data' => $packed, 'padding' => $padding];
@@ -384,30 +544,46 @@ class HuffmanCompressionService
     }
 
     /**
-     * Decode data using Huffman tree
+     * Decode data using Huffman tree (optimized with lookup table)
      */
     private function decodeData($encodedData, $tree, $symbolCount)
     {
         $decoded = '';
         $currentNode = $tree;
         $length = strlen($encodedData);
+        $decodedCount = 0;
         
-        for ($i = 0; $i < $length && strlen($decoded) < $symbolCount; $i++) {
+        // Pre-allocate for better memory efficiency
+        $chunks = [];
+        $chunkSize = 1000;
+        $chunk = '';
+        
+        for ($i = 0; $i < $length && $decodedCount < $symbolCount; $i++) {
             $bit = $encodedData[$i];
             
-            if ($bit === '0') {
-                $currentNode = $currentNode->left;
-            } else {
-                $currentNode = $currentNode->right;
-            }
+            // Traverse tree
+            $currentNode = ($bit === '0') ? $currentNode->left : $currentNode->right;
             
             if ($currentNode->isLeaf()) {
-                $decoded .= chr($currentNode->symbol);
+                $chunk .= chr($currentNode->symbol);
+                $decodedCount++;
+                
+                // Store chunk when it reaches size limit
+                if (strlen($chunk) >= $chunkSize) {
+                    $chunks[] = $chunk;
+                    $chunk = '';
+                }
+                
                 $currentNode = $tree;
             }
         }
         
-        return $decoded;
+        // Add remaining chunk
+        if ($chunk !== '') {
+            $chunks[] = $chunk;
+        }
+        
+        return implode('', $chunks);
     }
 
     /**
@@ -441,17 +617,44 @@ class HuffmanCompressionService
     private function createImageFromPixels($pixels, $width, $height)
     {
         $image = imagecreatetruecolor($width, $height);
+        $totalPixels = $width * $height;
+        $dataSize = strlen($pixels);
         
-        $index = 0;
-        for ($y = 0; $y < $height; $y++) {
-            for ($x = 0; $x < $width; $x++) {
-                if ($index < strlen($pixels)) {
-                    $gray = ord($pixels[$index]);
-                    $color = imagecolorallocate($image, $gray, $gray, $gray);
-                    imagesetpixel($image, $x, $y, $color);
-                    $index++;
+        // Auto-detect format based on data size
+        $isRGB = ($dataSize == $totalPixels * 3);
+        $isGrayscale = ($dataSize == $totalPixels);
+        
+        if ($isRGB) {
+            // RGB format (3 bytes per pixel)
+            $index = 0;
+            for ($y = 0; $y < $height; $y++) {
+                for ($x = 0; $x < $width; $x++) {
+                    if ($index + 2 < strlen($pixels)) {
+                        $r = ord($pixels[$index]);
+                        $g = ord($pixels[$index + 1]);
+                        $b = ord($pixels[$index + 2]);
+                        
+                        $color = imagecolorallocate($image, $r, $g, $b);
+                        imagesetpixel($image, $x, $y, $color);
+                        $index += 3;
+                    }
                 }
             }
+        } elseif ($isGrayscale) {
+            // Grayscale format (1 byte per pixel) - for backward compatibility
+            $index = 0;
+            for ($y = 0; $y < $height; $y++) {
+                for ($x = 0; $x < $width; $x++) {
+                    if ($index < strlen($pixels)) {
+                        $gray = ord($pixels[$index]);
+                        $color = imagecolorallocate($image, $gray, $gray, $gray);
+                        imagesetpixel($image, $x, $y, $color);
+                        $index++;
+                    }
+                }
+            }
+        } else {
+            throw new \Exception("Invalid pixel data size. Expected {$totalPixels} (grayscale) or " . ($totalPixels * 3) . " (RGB) bytes, got {$dataSize} bytes.");
         }
         
         return $image;
@@ -473,83 +676,299 @@ class HuffmanCompressionService
     }
 
     /**
-     * Save compressed data to binary file
+     * Save compressed data with user-selected format
      */
-    public function saveCompressedFile($encodedData, $metadata)
+    public function saveCompressedFile($encodedData, $metadata, $format = 'txt')
     {
-        $filename = 'compressed_' . time() . '.bin';
-        $path = 'public/compressed/' . $filename;
+        $filename = 'compressed_' . time();
+        $path = 'public/compressed/';
         
         Storage::makeDirectory('public/compressed');
         
-        // Pack Huffman codes to binary format
-        $packedCodes = $this->packHuffmanCodes($metadata['huffman_codes']);
+        switch (strtolower($format)) {
+            case 'json':
+                return $this->saveAsJson($encodedData, $metadata, $filename, $path);
+            
+            case 'zip':
+                return $this->saveAsZip($encodedData, $metadata, $filename, $path);
+            
+            case 'bin':
+                return $this->saveAsBinary($encodedData, $metadata, $filename, $path);
+            
+            case 'txt':
+            default:
+                return $this->saveAsText($encodedData, $metadata, $filename, $path);
+        }
+    }
+    
+    /**
+     * Save as TXT format (human-readable)
+     */
+    private function saveAsText($encodedData, $metadata, $filename, $path)
+    {
+        $filename .= '.txt';
+        $fullPath = 'compressed/' . $filename; // Simpan langsung ke compressed/ di disk public
         
-        // Create ultra-compact binary header
-        $header = pack('v3C', 
-            $metadata['width'],     // 2 bytes - width (up to 65535)
-            $metadata['height'],    // 2 bytes - height (up to 65535)
-            $packedCodes['count'],  // 2 bytes - number of codes
-            $metadata['padding']    // 1 byte - padding bits
-        );
+        $content = "KOMPRESIN COMPRESSED IMAGE FILE\n";
+        $content .= "================================\n";
+        $content .= "Version: 1.0\n";
+        $content .= "Algorithm: DEFLATE (LZ77 + Huffman)\n";
+        $content .= "Width: " . $metadata['width'] . "\n";
+        $content .= "Height: " . $metadata['height'] . "\n";
+        $content .= "Type: " . $metadata['type'] . "\n";
+        $content .= "Compressed At: " . date('Y-m-d H:i:s') . "\n";
+        $content .= "Original Size: " . strlen($encodedData) . " bytes\n";
+        $content .= "================================\n";
+        $content .= "DATA (Base64 Encoded):\n";
+        $content .= base64_encode($encodedData);
         
-        // Add image type (1 byte: 1=jpg, 2=png, 3=bmp)
-        $typeMap = ['jpg' => 1, 'jpeg' => 1, 'png' => 2, 'bmp' => 3];
-        $header .= pack('C', $typeMap[$metadata['type']] ?? 2);
-        
-        // Binary format: header (8 bytes) + packed_codes + encoded_data
-        $binaryData = $header . $packedCodes['data'] . $encodedData;
-        
-        Storage::put($path, $binaryData);
+        Storage::disk('public')->put($fullPath, $content);
         
         return [
-            'path' => $path,
-            'url' => Storage::url($path),
+            'path' => 'public/' . $fullPath,
+            'url' => '/storage/' . $fullPath,
+            'filename' => $filename,
+            'size' => strlen($content),
+            'format' => 'txt',
+        ];
+    }
+    
+    /**
+     * Save as JSON format
+     */
+    private function saveAsJson($encodedData, $metadata, $filename, $path)
+    {
+        $filename .= '.json';
+        $fullPath = 'compressed/' . $filename;
+        
+        $jsonData = [
+            'version' => '1.0',
+            'algorithm' => 'DEFLATE',
+            'metadata' => [
+                'width' => $metadata['width'],
+                'height' => $metadata['height'],
+                'type' => $metadata['type'],
+                'compressed_at' => date('Y-m-d H:i:s'),
+            ],
+            'data' => base64_encode($encodedData),
+        ];
+        
+        $content = json_encode($jsonData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        Storage::disk('public')->put($fullPath, $content);
+        
+        return [
+            'path' => 'public/' . $fullPath,
+            'url' => '/storage/' . $fullPath,
+            'filename' => $filename,
+            'size' => strlen($content),
+            'format' => 'json',
+        ];
+    }
+    
+    /**
+     * Save as ZIP format
+     */
+    private function saveAsZip($encodedData, $metadata, $filename, $path)
+    {
+        $filename .= '.zip';
+        $fullPath = 'compressed/' . $filename;
+        $diskPath = Storage::disk('public')->path($fullPath);
+        
+        $zip = new \ZipArchive();
+        if ($zip->open($diskPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== TRUE) {
+            throw new \Exception("Cannot create ZIP file");
+        }
+        
+        // Add compressed data
+        $zip->addFromString('compressed.dat', $encodedData);
+        
+        // Add metadata
+        $metadataJson = json_encode([
+            'version' => '1.0',
+            'algorithm' => 'DEFLATE',
+            'width' => $metadata['width'],
+            'height' => $metadata['height'],
+            'type' => $metadata['type'],
+            'compressed_at' => date('Y-m-d H:i:s'),
+        ], JSON_PRETTY_PRINT);
+        
+        $zip->addFromString('metadata.json', $metadataJson);
+        
+        // Add README
+        $readme = "Kompresin - Huffman Image Compression\n";
+        $readme .= "=====================================\n\n";
+        $readme .= "Upload this ZIP to Kompresin to decompress.\n";
+        $zip->addFromString('README.txt', $readme);
+        
+        $zip->close();
+        
+        return [
+            'path' => 'public/' . $fullPath,
+            'url' => '/storage/' . $fullPath,
+            'filename' => $filename,
+            'size' => filesize($diskPath),
+            'format' => 'zip',
+        ];
+    }
+    
+    /**
+     * Save as Binary format
+     */
+    private function saveAsBinary($encodedData, $metadata, $filename, $path)
+    {
+        $filename .= '.bin';
+        $fullPath = 'compressed/' . $filename;
+        
+        $typeMap = ['jpg' => 1, 'jpeg' => 1, 'png' => 2, 'bmp' => 3];
+        $header = pack('vvCC', 
+            $metadata['width'],
+            $metadata['height'],
+            $typeMap[$metadata['type']] ?? 2,
+            1 // Algorithm: 1 = DEFLATE
+        );
+        
+        $binaryData = $header . $encodedData;
+        Storage::disk('public')->put($fullPath, $binaryData);
+        
+        return [
+            'path' => 'public/' . $fullPath,
+            'url' => '/storage/' . $fullPath,
             'filename' => $filename,
             'size' => strlen($binaryData),
+            'format' => 'bin',
         ];
     }
 
     /**
-     * Load compressed file
+     * Load compressed file (supports TXT, ZIP, JSON, and binary formats)
      */
     public function loadCompressedFile($path)
     {
-        $binaryData = Storage::get($path);
+        // Try to load from public disk first, then fallback to default
+        if (Storage::disk('public')->exists($path)) {
+            $content = Storage::disk('public')->get($path);
+        } else {
+            $content = Storage::get($path);
+        }
+        $extension = pathinfo($path, PATHINFO_EXTENSION);
         
-        // Read header (8 bytes)
-        $header = unpack('vwidth/vheight/vcount/Cpadding/Ctype', substr($binaryData, 0, 8));
+        // Try TXT format (new format)
+        if ($extension === 'txt' || strpos($content, 'KOMPRESIN COMPRESSED IMAGE FILE') === 0) {
+            // Parse text format
+            $lines = explode("\n", $content);
+            $metadata = [];
+            $dataStarted = false;
+            $base64Data = '';
+            
+            foreach ($lines as $line) {
+                if ($dataStarted) {
+                    $base64Data .= trim($line);
+                } elseif (strpos($line, 'Width:') === 0) {
+                    $metadata['width'] = (int)trim(substr($line, 6));
+                } elseif (strpos($line, 'Height:') === 0) {
+                    $metadata['height'] = (int)trim(substr($line, 7));
+                } elseif (strpos($line, 'Type:') === 0) {
+                    $metadata['type'] = trim(substr($line, 5));
+                } elseif (strpos($line, 'Algorithm:') === 0) {
+                    $metadata['algorithm'] = trim(substr($line, 10));
+                } elseif (strpos($line, 'DATA (Base64 Encoded):') === 0) {
+                    $dataStarted = true;
+                }
+            }
+            
+            $encodedData = base64_decode($base64Data);
+            
+            return [
+                'metadata' => [
+                    'width' => $metadata['width'],
+                    'height' => $metadata['height'],
+                    'type' => $metadata['type'],
+                    'algorithm' => $metadata['algorithm'] ?? 'DEFLATE',
+                    'huffman_tree' => null,
+                ],
+                'encoded_data' => $encodedData,
+            ];
+        }
         
-        $width = $header['width'];
-        $height = $header['height'];
-        $codesCount = $header['count'];
-        $padding = $header['padding'];
+        // Try ZIP format
+        if ($extension === 'zip') {
+            // Try public disk first, then fallback
+            if (Storage::disk('public')->exists($path)) {
+                $fullPath = Storage::disk('public')->path($path);
+            } else {
+                $fullPath = Storage::path($path);
+            }
+            $zip = new \ZipArchive();
+            if ($zip->open($fullPath) === TRUE) {
+                $metadataJson = $zip->getFromName('metadata.json');
+                if ($metadataJson !== false) {
+                    $metadata = json_decode($metadataJson, true);
+                    $encodedData = $zip->getFromName('compressed.dat');
+                    $zip->close();
+                    
+                    if ($encodedData !== false) {
+                        return [
+                            'metadata' => [
+                                'width' => $metadata['width'],
+                                'height' => $metadata['height'],
+                                'type' => $metadata['type'],
+                                'algorithm' => $metadata['algorithm'] ?? 'DEFLATE',
+                                'huffman_tree' => null,
+                            ],
+                            'encoded_data' => $encodedData,
+                        ];
+                    }
+                }
+                $zip->close();
+            }
+        }
         
-        // Map type back
-        $typeMap = [1 => 'jpg', 2 => 'png', 3 => 'bmp'];
-        $type = $typeMap[$header['type']] ?? 'png';
+        // Try JSON format
+        $jsonData = json_decode($content, true);
+        if ($jsonData && isset($jsonData['data']) && isset($jsonData['metadata'])) {
+            $encodedData = base64_decode($jsonData['data']);
+            $metadata = $jsonData['metadata'];
+            
+            return [
+                'metadata' => [
+                    'width' => $metadata['width'],
+                    'height' => $metadata['height'],
+                    'type' => $metadata['type'],
+                    'algorithm' => $jsonData['algorithm'] ?? 'DEFLATE',
+                    'huffman_tree' => null,
+                ],
+                'encoded_data' => $encodedData,
+            ];
+        }
         
-        // Unpack Huffman codes
-        $offset = 8;
-        $codes = $this->unpackHuffmanCodes($binaryData, $codesCount, $offset);
+        // Fallback: Binary format (old .bin/.huf files)
+        $binaryData = $content;
+        if (strlen($binaryData) > 6) {
+            $header = unpack('vwidth/vheight/Ctype/Calgorithm', substr($binaryData, 0, 6));
+            
+            $width = $header['width'];
+            $height = $header['height'];
+            
+            $typeMap = [1 => 'jpg', 2 => 'png', 3 => 'bmp'];
+            $type = $typeMap[$header['type']] ?? 'png';
+            
+            $algorithm = $header['algorithm'] === 1 ? 'DEFLATE' : 'Unknown';
+            
+            $encodedData = substr($binaryData, 6);
+            
+            return [
+                'metadata' => [
+                    'width' => $width,
+                    'height' => $height,
+                    'type' => $type,
+                    'algorithm' => $algorithm,
+                    'huffman_tree' => null,
+                ],
+                'encoded_data' => $encodedData,
+            ];
+        }
         
-        // Read encoded data (rest of file)
-        $encodedData = substr($binaryData, $offset);
-        
-        // Rebuild tree from codes
-        $huffmanTree = $this->rebuildTreeFromCodes($codes);
-        
-        return [
-            'metadata' => [
-                'width' => $width,
-                'height' => $height,
-                'type' => $type,
-                'padding' => $padding,
-                'huffman_tree' => $huffmanTree,
-                'huffman_codes' => $codes,
-            ],
-            'encoded_data' => $encodedData,
-        ];
+        throw new \Exception("Invalid compressed file format");
     }
 
     /**

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, Head, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
+import AppHeader from '@/components/AppHeader';
 
 interface HistoryItem {
     id: number;
@@ -90,31 +91,8 @@ export default function Index({ histories }: Props) {
         <>
             <Head title="Riwayat Kompresi" />
             
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800">
-                {/* Header */}
-                <header className="bg-white dark:bg-gray-800 shadow-sm">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                        <div className="flex items-center justify-between">
-                            <Link href="/" className="text-xl font-bold text-gray-900 dark:text-white">
-                                ← Kembali
-                            </Link>
-                            <div className="flex items-center space-x-4">
-                                <Link
-                                    href="/compress"
-                                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                                >
-                                    Kompresi
-                                </Link>
-                                <Link
-                                    href="/decompress"
-                                    className="text-sm text-green-600 dark:text-green-400 hover:underline"
-                                >
-                                    Dekompresi
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-                </header>
+            <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-gray-900 dark:to-gray-800">
+                <AppHeader currentPage="history" showBackButton />
 
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <motion.div

@@ -5,6 +5,7 @@ import StatsCard from '@/components/Compression/StatsCard';
 import HuffmanTreeVisualization from '@/components/Compression/HuffmanTreeVisualization';
 import HuffmanCodeTable from '@/components/Compression/HuffmanCodeTable';
 import ImagePreview from '@/components/Compression/ImagePreview';
+import AppHeader from '@/components/AppHeader';
 
 interface CompressionResult {
     original_size: number;
@@ -19,6 +20,8 @@ interface CompressionResult {
     compressed_file_url: string;
     compressed_filename: string;
     original_image_url: string;
+    algorithm?: string; // Algorithm used (DEFLATE, etc)
+    compression_time?: number; // Time taken for compression
     huffman_tree: any;
     huffman_codes: Array<{
         symbol: number;
@@ -34,6 +37,7 @@ export default function Index() {
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<CompressionResult | null>(null);
     const [error, setError] = useState<string>('');
+    const [selectedFormat, setSelectedFormat] = useState<string>('txt');
 
     const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -73,6 +77,7 @@ export default function Index() {
 
         const formData = new FormData();
         formData.append('image', selectedFile);
+        formData.append('format', selectedFormat);
 
         try {
             const response = await fetch('/compress', {
@@ -109,31 +114,8 @@ export default function Index() {
         <>
             <Head title="Kompresi Gambar" />
             
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800">
-                {/* Header */}
-                <header className="bg-white dark:bg-gray-800 shadow-sm">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                        <div className="flex items-center justify-between">
-                            <Link href="/" className="text-xl font-bold text-gray-900 dark:text-white">
-                                ← Kembali
-                            </Link>
-                            <div className="flex items-center space-x-4">
-                                <Link
-                                    href="/decompress"
-                                    className="text-sm text-green-600 dark:text-green-400 hover:underline"
-                                >
-                                    Dekompresi
-                                </Link>
-                                <Link
-                                    href="/history"
-                                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                                >
-                                    Riwayat
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-                </header>
+            <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-gray-900 dark:to-gray-800">
+                <AppHeader currentPage="compress" showBackButton />
 
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <motion.div
@@ -240,29 +222,148 @@ export default function Index() {
                                 )}
                             </div>
 
-                            {error && (
-                                <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                                    <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                            {/* Format Selector */}
+                            <div className="mb-6">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                                    Pilih Format File Hasil Kompresi
+                                </label>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedFormat('txt')}
+                                        className={`relative flex flex-col items-center p-4 rounded-lg border-2 transition-all ${
+                                            selectedFormat === 'txt'
+                                                ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20 shadow-lg'
+                                                : 'border-gray-300 dark:border-gray-600 hover:border-teal-300'
+                                        }`}
+                                    >
+                                        <svg className="w-8 h-8 mb-2 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        <span className="font-semibold text-sm">TXT</span>
+                                        <span className="text-xs text-gray-500 mt-1">Human Readable</span>
+                                        {selectedFormat === 'txt' && (
+                                            <div className="absolute top-2 right-2">
+                                                <svg className="w-5 h-5 text-teal-600" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                                </svg>
+                                            </div>
+                                        )}
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedFormat('json')}
+                                        className={`relative flex flex-col items-center p-4 rounded-lg border-2 transition-all ${
+                                            selectedFormat === 'json'
+                                                ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20 shadow-lg'
+                                                : 'border-gray-300 dark:border-gray-600 hover:border-cyan-300'
+                                        }`}
+                                    >
+                                        <svg className="w-8 h-8 mb-2 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                                        </svg>
+                                        <span className="font-semibold text-sm">JSON</span>
+                                        <span className="text-xs text-gray-500 mt-1">Structured</span>
+                                        {selectedFormat === 'json' && (
+                                            <div className="absolute top-2 right-2">
+                                                <svg className="w-5 h-5 text-cyan-600" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                                </svg>
+                                            </div>
+                                        )}
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedFormat('zip')}
+                                        className={`relative flex flex-col items-center p-4 rounded-lg border-2 transition-all ${
+                                            selectedFormat === 'zip'
+                                                ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 shadow-lg'
+                                                : 'border-gray-300 dark:border-gray-600 hover:border-purple-300'
+                                        }`}
+                                    >
+                                        <svg className="w-8 h-8 mb-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                        </svg>
+                                        <span className="font-semibold text-sm">ZIP</span>
+                                        <span className="text-xs text-gray-500 mt-1">Archive</span>
+                                        {selectedFormat === 'zip' && (
+                                            <div className="absolute top-2 right-2">
+                                                <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                                </svg>
+                                            </div>
+                                        )}
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedFormat('bin')}
+                                        className={`relative flex flex-col items-center p-4 rounded-lg border-2 transition-all ${
+                                            selectedFormat === 'bin'
+                                                ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20 shadow-lg'
+                                                : 'border-gray-300 dark:border-gray-600 hover:border-orange-300'
+                                        }`}
+                                    >
+                                        <svg className="w-8 h-8 mb-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                                        </svg>
+                                        <span className="font-semibold text-sm">BIN</span>
+                                        <span className="text-xs text-gray-500 mt-1">Binary</span>
+                                        {selectedFormat === 'bin' && (
+                                            <div className="absolute top-2 right-2">
+                                                <svg className="w-5 h-5 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                                </svg>
+                                            </div>
+                                        )}
+                                    </button>
                                 </div>
+                                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                    💡 TXT & JSON: Mudah dibaca | ZIP: Kompatibel universal | BIN: Ukuran minimal
+                                </p>
+                            </div>
+
+                            {error && (
+                                <motion.div 
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="mb-4 p-4 bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 border-2 border-red-300 dark:border-red-700 rounded-xl shadow-md"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <svg className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                        </svg>
+                                        <p className="text-sm font-medium text-red-700 dark:text-red-300">{error}</p>
+                                    </div>
+                                </motion.div>
                             )}
 
-                            <button
+                            <motion.button
                                 type="submit"
                                 disabled={!selectedFile || loading}
-                                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center"
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                className="w-full bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl disabled:shadow-none"
                             >
                                 {loading ? (
                                     <>
-                                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <svg className="animate-spin -ml-1 mr-3 h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                         </svg>
-                                        Memproses...
+                                        <span className="text-lg">Memproses...</span>
                                     </>
                                 ) : (
-                                    'Kompres Gambar'
+                                    <>
+                                        <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                        </svg>
+                                        <span className="text-lg">Kompres Gambar</span>
+                                    </>
                                 )}
-                            </button>
+                            </motion.button>
                         </form>
                     </motion.div>
 
@@ -273,35 +374,92 @@ export default function Index() {
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.2 }}
-                                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
+                                transition={{ delay: 0.2, staggerChildren: 0.1 }}
+                                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
                             >
-                                <StatsCard
-                                    title="File Asli (JPG/PNG)"
-                                    value={formatBytes(result.original_file_size)}
-                                    subtitle={`${result.width}x${result.height} pixels`}
-                                    color="blue"
-                                />
-                                <StatsCard
-                                    title="File Kompres (.bin)"
-                                    value={formatBytes(result.compressed_size)}
-                                    subtitle={result.file_compression_ratio > 0 
-                                        ? `Hemat ${result.file_compression_ratio.toFixed(2)}%` 
-                                        : `Lebih besar ${Math.abs(result.file_compression_ratio).toFixed(2)}%`}
-                                    color={result.file_compression_ratio > 0 ? "green" : "red"}
-                                />
-                                <StatsCard
-                                    title="Kompresi Pixel Data"
-                                    value={`${result.compression_ratio.toFixed(2)}%`}
-                                    subtitle={`${formatBytes(result.original_size)} → ${formatBytes(result.compressed_size)}`}
-                                    color="purple"
-                                />
-                                <StatsCard
-                                    title="Bits Per Pixel"
-                                    value={result.bits_per_pixel.toFixed(4)}
-                                    subtitle={`Entropy: ${result.entropy.toFixed(4)}`}
-                                    color="orange"
-                                />
+                                <motion.div whileHover={{ y: -5 }} transition={{ type: "spring", stiffness: 300 }}>
+                                    <StatsCard
+                                        title="File Asli (JPG/PNG)"
+                                        value={formatBytes(result.original_file_size)}
+                                        subtitle={`${result.width}x${result.height} pixels`}
+                                        color="cyan"
+                                        icon={
+                                            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                        }
+                                    />
+                                </motion.div>
+                                <motion.div whileHover={{ y: -5 }} transition={{ type: "spring", stiffness: 300 }}>
+                                    <StatsCard
+                                        title="File Kompres (.bin)"
+                                        value={formatBytes(result.compressed_size)}
+                                        subtitle={result.file_compression_ratio > 0 
+                                            ? `Hemat ${result.file_compression_ratio.toFixed(2)}%` 
+                                            : `Lebih besar ${Math.abs(result.file_compression_ratio).toFixed(2)}%`}
+                                        color={result.file_compression_ratio > 0 ? "green" : "red"}
+                                        icon={
+                                            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                            </svg>
+                                        }
+                                    />
+                                </motion.div>
+                                <motion.div whileHover={{ y: -5 }} transition={{ type: "spring", stiffness: 300 }}>
+                                    <StatsCard
+                                        title="Kompresi Pixel Data"
+                                        value={`${result.compression_ratio.toFixed(2)}%`}
+                                        subtitle={`${formatBytes(result.original_size)} → ${formatBytes(result.compressed_size)}`}
+                                        color="teal"
+                                        icon={
+                                            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                                            </svg>
+                                        }
+                                    />
+                                </motion.div>
+                                <motion.div whileHover={{ y: -5 }} transition={{ type: "spring", stiffness: 300 }}>
+                                    <StatsCard
+                                        title="Bits Per Pixel"
+                                        value={result.bits_per_pixel.toFixed(4)}
+                                        subtitle={`Entropy: ${result.entropy.toFixed(4)}`}
+                                        color="teal"
+                                        icon={
+                                            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                            </svg>
+                                        }
+                                    />
+                                </motion.div>
+                            </motion.div>
+
+                            {/* Algorithm Info */}
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: 0.23, type: "spring", stiffness: 100 }}
+                                className="mb-6 p-5 rounded-xl border-2 bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 border-teal-300 dark:border-teal-700 shadow-lg"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-teal-500 to-cyan-600 dark:from-teal-600 dark:to-cyan-700 rounded-xl flex items-center justify-center shadow-md animate-pulse">
+                                        <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                        </svg>
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-sm font-semibold text-teal-900 dark:text-teal-100">
+                                            {result.algorithm || 'DEFLATE (LZ77 + Huffman)'}
+                                            {result.compression_time && (
+                                                <span className="ml-2 text-xs bg-teal-200 dark:bg-teal-800 px-2 py-1 rounded-full font-medium">
+                                                    ⚡ {(result.compression_time * 1000).toFixed(0)}ms
+                                                </span>
+                                            )}
+                                        </p>
+                                        <p className="text-xs text-teal-700 dark:text-teal-300 mt-1">
+                                            Industry-standard compression • ZIP/GZIP compatible
+                                        </p>
+                                    </div>
+                                </div>
                             </motion.div>
 
                             {/* File Size Comparison Info */}
@@ -328,20 +486,21 @@ export default function Index() {
                                         <span className="text-red-600 dark:text-red-400 font-semibold"> (Lebih besar {Math.abs(result.file_compression_ratio).toFixed(2)}%)</span>
                                     )}
                                 </p>
+                                
                                 <p className={`text-xs mt-2 ${
                                     result.file_compression_ratio > 0 
                                         ? 'text-green-600 dark:text-green-300'
                                         : 'text-yellow-700 dark:text-yellow-300'
                                 }`}>
                                     <strong>💡 Penjelasan:</strong> {result.file_compression_ratio > 0 ? (
-                                        <>Huffman berhasil mengompresi pixel data! Ini bagus untuk gambar dengan pola repetitif.</>
+                                        <>DEFLATE (LZ77 + Huffman) berhasil mengompresi pixel data! Ini bagus untuk gambar dengan pola repetitif.</>
                                     ) : (
                                         <>
-                                            Huffman Coding bekerja pada pixel data RAW (grayscale). 
+                                            DEFLATE bekerja pada pixel data RAW (grayscale). 
                                             File JPG sudah terkompresi dengan algoritma DCT yang <strong>10-20x lebih efisien</strong>. 
                                             Hasil .bin lebih besar karena: <br/>
                                             1. Kehilangan kompresi JPG original (DCT + Quantization)<br/>
-                                            2. Overhead Huffman table (~300-500 bytes)<br/>
+                                            2. Overhead header (~6 bytes)<br/>
                                             3. Grayscale conversion loss<br/>
                                             <strong>Gunakan BMP/PNG sederhana untuk hasil optimal.</strong>
                                         </>

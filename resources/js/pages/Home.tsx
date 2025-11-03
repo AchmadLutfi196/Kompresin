@@ -1,32 +1,14 @@
 import { Link, Head } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { ThemeToggle } from '@/components/theme-toggle';
+import AppHeader from '@/components/AppHeader';
 
 export default function Home() {
     return (
         <>
             <Head title="Kompresi Citra - Huffman Coding" />
             
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800">
-                {/* Header */}
-                <header className="bg-white dark:bg-gray-800 shadow-sm">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                        <div className="flex items-center justify-between">
-                            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                                Kompresi Citra
-                            </h1>
-                            <div className="flex items-center gap-4">
-                                <ThemeToggle />
-                                <Link
-                                    href="/history"
-                                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                                >
-                                    Lihat Riwayat
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-                </header>
+            <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-gray-900 dark:to-gray-800">
+                <AppHeader currentPage="home" />
 
                 {/* Hero Section */}
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -75,9 +57,9 @@ export default function Home() {
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.5, delay: 0.2 }}
-                            className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8"
+                            className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 border border-teal-100 dark:border-teal-900"
                         >
-                            <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mb-4">
+                            <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-lg flex items-center justify-center mb-4">
                                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                                 </svg>
@@ -91,7 +73,7 @@ export default function Home() {
                             </p>
                             <Link
                                 href="/compress"
-                                className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold"
+                                className="inline-flex items-center text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-semibold"
                             >
                                 Mulai Kompresi
                                 <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -104,9 +86,9 @@ export default function Home() {
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.5, delay: 0.3 }}
-                            className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8"
+                            className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 border border-cyan-100 dark:border-cyan-900"
                         >
-                            <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mb-4">
+                            <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-teal-600 rounded-lg flex items-center justify-center mb-4">
                                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
                                 </svg>
@@ -115,12 +97,12 @@ export default function Home() {
                                 Dekompresi Gambar
                             </h3>
                             <p className="text-gray-600 dark:text-gray-300 mb-4">
-                                Upload file hasil kompresi (.bin) dan kembalikan ke gambar asli. 
+                                Upload file hasil kompresi (.txt, .json, .zip, .bin) dan kembalikan ke gambar asli. 
                                 Bandingkan kualitas hasil dekompresi dengan citra awal.
                             </p>
                             <Link
                                 href="/decompress"
-                                className="inline-flex items-center text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-semibold"
+                                className="inline-flex items-center text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 font-semibold"
                             >
                                 Mulai Dekompresi
                                 <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -135,7 +117,7 @@ export default function Home() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: 0.4 }}
-                        className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 mb-8"
+                        className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 mb-8 border border-gray-100 dark:border-gray-700"
                     >
                         <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
                             Konsep Dasar

@@ -52,13 +52,25 @@ class CompressionController extends Controller
     public function compress(Request $request)
     {
         $request->validate([
-            'image' => 'required|image|mimes:jpeg,jpg,png,bmp|max:10240', // max 10MB
+            'image' => 'required|image|mimes:jpeg,jpg,png,bmp|max:20480', // max 20MB
+            'format' => 'nullable|string|in:txt,json,zip,bin', // format pilihan user
         ]);
 
         try {
             // Store uploaded image
             $image = $request->file('image');
             $originalFilename = $image->getClientOriginalName();
+            
+            // Check image dimensions before processing
+            list($width, $height) = getimagesize($image->getPathname());
+            $totalPixels = $width * $height;
+            
+            if ($totalPixels > 100000000) { // 100 megapixels
+                return response()->json([
+                    'success' => false,
+                    'message' => "Gambar terlalu besar! Maksimum 100 megapixels. Gambar Anda: {$width}x{$height} = " . number_format($totalPixels) . " pixels. Coba resize gambar terlebih dahulu.",
+                ], 422);
+            }
             
             // Create directory if not exists
             Storage::makeDirectory('public/originals');
@@ -82,19 +94,31 @@ class CompressionController extends Controller
             $originalFileSize = filesize($fullPath);
 
             // Compress image
-            $compressionResult = $this->huffmanService->compress($fullPath);
+            try {
+                $compressionResult = $this->huffmanService->compress($fullPath);
+            } catch (\Exception $e) {
+                Log::error('Compression service error', [
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+                throw $e;
+            }
 
             // Save compressed file
+            $format = $request->input('format', 'txt'); // Default to txt
             $compressedFile = $this->huffmanService->saveCompressedFile(
                 $compressionResult['encoded_data'],
                 [
-                    'huffman_tree' => $compressionResult['huffman_tree'],
-                    'huffman_codes' => $compressionResult['huffman_codes'],
+                    'huffman_tree' => $compressionResult['huffman_tree'] ?? null,
+                    'huffman_codes' => $compressionResult['huffman_codes'] ?? [],
                     'width' => $compressionResult['width'],
                     'height' => $compressionResult['height'],
                     'type' => $compressionResult['type'],
-                    'padding' => $compressionResult['padding'],
-                ]
+                    'algorithm' => $compressionResult['algorithm'] ?? 'DEFLATE',
+                ],
+                $format // Pass format parameter
             );
 
             // Get Huffman codes for visualization
@@ -142,6 +166,8 @@ class CompressionController extends Controller
                     'height' => $compressionResult['height'],
                     'compressed_file_url' => $compressedFile['url'],
                     'compressed_filename' => $compressedFile['filename'],
+                    'algorithm' => $compressionResult['algorithm'] ?? 'DEFLATE (LZ77 + Huffman)',
+                    'compression_time' => round($compressionResult['compression_time'] ?? 0, 3),
                     'original_image_url' => Storage::url($originalPath),
                     'huffman_tree' => $compressionResult['huffman_tree'],
                     'huffman_codes' => $huffmanCodesVisualization,
@@ -200,12 +226,20 @@ class CompressionController extends Controller
                 $metadata['width'],
                 $metadata['height'],
                 $metadata['type'],
-                $metadata['padding'] ?? 0
+                $metadata['algorithm'] ?? 'DEFLATE'
             );
 
             // Calculate file sizes
-            $compressedSize = Storage::size($path);
-            $decompressedSize = Storage::size($decompressedImage['path']);
+            // For compressed file, try public disk first
+            if (Storage::disk('public')->exists($path)) {
+                $compressedSize = Storage::disk('public')->size($path);
+            } else {
+                $compressedSize = Storage::size($path);
+            }
+            
+            // For decompressed file, extract path from the return value
+            $decompressedPath = str_replace('public/', '', $decompressedImage['path']);
+            $decompressedSize = Storage::disk('public')->size($decompressedPath);
 
             // Save to history
             $history = CompressionHistory::create([
@@ -226,6 +260,7 @@ class CompressionController extends Controller
                 'data' => [
                     'decompressed_image_url' => $decompressedImage['url'],
                     'decompressed_filename' => $decompressedImage['filename'],
+                    'decompression_time' => round($decompressedImage['decompression_time'] ?? 0, 3),
                     'width' => $metadata['width'],
                     'height' => $metadata['height'],
                     'compressed_size' => $compressedSize,
