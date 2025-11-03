@@ -78,6 +78,9 @@ class CompressionController extends Controller
                 throw new \Exception('File stored but not found at: ' . $fullPath);
             }
 
+            // Get ACTUAL file size of uploaded JPG/PNG
+            $originalFileSize = filesize($fullPath);
+
             // Compress image
             $compressionResult = $this->huffmanService->compress($fullPath);
 
@@ -97,8 +100,16 @@ class CompressionController extends Controller
             // Get Huffman codes for visualization
             $huffmanCodesVisualization = $this->huffmanService->getHuffmanCodesForVisualization();
 
-            // Calculate REAL compression ratio with metadata overhead
-            $realCompressionRatio = (1 - ($compressedFile['size'] / $compressionResult['original_size'])) * 100;
+            // Calculate compression metrics
+            // Compare with actual file size (JPG/PNG original file)
+            $pixelDataSize = $compressionResult['original_size']; // Grayscale pixel data
+            $binaryFileSize = $compressedFile['size']; // .bin file with header
+            
+            // Compression ratio based on pixel data (theoretical)
+            $pixelCompressionRatio = (1 - ($binaryFileSize / $pixelDataSize)) * 100;
+            
+            // Real file comparison (JPG/PNG → .bin)
+            $fileCompressionRatio = (1 - ($binaryFileSize / $originalFileSize)) * 100;
 
             // Save to history
             $history = CompressionHistory::create([
@@ -106,9 +117,9 @@ class CompressionController extends Controller
                 'filename' => $originalFilename,
                 'original_path' => $originalPath,
                 'compressed_path' => $compressedFile['path'],
-                'original_size' => $compressionResult['original_size'],
-                'compressed_size' => $compressedFile['size'],
-                'compression_ratio' => $realCompressionRatio, // Use real ratio
+                'original_size' => $pixelDataSize, // Pixel data size for algorithm analysis
+                'compressed_size' => $binaryFileSize,
+                'compression_ratio' => $pixelCompressionRatio, // Theoretical compression
                 'bits_per_pixel' => $compressionResult['bits_per_pixel'],
                 'entropy' => $compressionResult['entropy'],
                 'huffman_table' => $compressionResult['huffman_codes'],
@@ -120,9 +131,11 @@ class CompressionController extends Controller
                 'success' => true,
                 'message' => 'Image compressed successfully',
                 'data' => [
-                    'original_size' => $compressionResult['original_size'],
-                    'compressed_size' => $compressedFile['size'],
-                    'compression_ratio' => round($realCompressionRatio, 2), // Use real ratio
+                    'original_size' => $pixelDataSize,
+                    'compressed_size' => $binaryFileSize,
+                    'compression_ratio' => round($pixelCompressionRatio, 2),
+                    'original_file_size' => $originalFileSize, // Actual JPG/PNG file size
+                    'file_compression_ratio' => round($fileCompressionRatio, 2), // Real file comparison
                     'bits_per_pixel' => round($compressionResult['bits_per_pixel'], 4),
                     'entropy' => round($compressionResult['entropy'], 4),
                     'width' => $compressionResult['width'],

@@ -45,6 +45,30 @@ export default function Home() {
                         </p>
                     </motion.div>
 
+                    {/* Important Notice */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.15 }}
+                        className="bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-200 dark:border-amber-800 rounded-lg p-6 mb-12"
+                    >
+                        <div className="flex items-start gap-3">
+                            <svg className="w-6 h-6 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <div>
+                                <h4 className="font-bold text-amber-900 dark:text-amber-200 mb-2">
+                                    📚 Catatan: Tujuan Pembelajaran
+                                </h4>
+                                <p className="text-sm text-amber-800 dark:text-amber-300">
+                                    Aplikasi ini dibuat untuk <strong>pembelajaran algoritma Huffman Coding</strong>, bukan untuk kompresi praktis. 
+                                    File JPG/PNG foto akan menjadi <strong>lebih besar</strong> karena sudah terkompresi optimal. 
+                                    Gunakan <strong>BMP atau gambar sederhana</strong> untuk melihat Huffman bekerja dengan baik.
+                                </p>
+                            </div>
+                        </div>
+                    </motion.div>
+
                     {/* Features Grid */}
                     <div className="grid md:grid-cols-2 gap-8 mb-16">
                         <motion.div

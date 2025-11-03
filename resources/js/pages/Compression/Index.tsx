@@ -10,6 +10,8 @@ interface CompressionResult {
     original_size: number;
     compressed_size: number;
     compression_ratio: number;
+    original_file_size: number; // Actual JPG/PNG file size
+    file_compression_ratio: number; // Real file comparison
     bits_per_pixel: number;
     entropy: number;
     width: number;
@@ -147,6 +149,39 @@ export default function Index() {
                         </p>
                     </motion.div>
 
+                    {/* Warning Box - Important Info */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.05 }}
+                        className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-5 mb-6"
+                    >
+                        <div className="flex gap-3">
+                            <div className="flex-shrink-0">
+                                <svg className="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
+                                    ⚠️ Penting: Keterbatasan Huffman Coding untuk Gambar
+                                </h3>
+                                <div className="text-sm text-yellow-700 dark:text-yellow-300 space-y-2">
+                                    <p>
+                                        <strong>File JPG/PNG akan jadi LEBIH BESAR</strong> karena sudah terkompresi dengan algoritma lebih efisien (DCT, LZW).
+                                    </p>
+                                    <p className="text-xs">
+                                        <strong>✅ Cocok untuk:</strong> BMP, gambar sederhana, logo, diagram<br/>
+                                        <strong>❌ Tidak cocok untuk:</strong> JPG foto natural, PNG kompleks
+                                    </p>
+                                    <p className="text-xs italic">
+                                        Aplikasi ini dibuat untuk <strong>pembelajaran algoritma Huffman</strong>, bukan untuk kompresi praktis.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+
                     {/* Upload Form */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -242,21 +277,23 @@ export default function Index() {
                                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
                             >
                                 <StatsCard
-                                    title="Ukuran Asli"
-                                    value={formatBytes(result.original_size)}
+                                    title="File Asli (JPG/PNG)"
+                                    value={formatBytes(result.original_file_size)}
                                     subtitle={`${result.width}x${result.height} pixels`}
                                     color="blue"
                                 />
                                 <StatsCard
-                                    title="Ukuran Kompres"
+                                    title="File Kompres (.bin)"
                                     value={formatBytes(result.compressed_size)}
-                                    subtitle="File .bin"
-                                    color="green"
+                                    subtitle={result.file_compression_ratio > 0 
+                                        ? `Hemat ${result.file_compression_ratio.toFixed(2)}%` 
+                                        : `Lebih besar ${Math.abs(result.file_compression_ratio).toFixed(2)}%`}
+                                    color={result.file_compression_ratio > 0 ? "green" : "red"}
                                 />
                                 <StatsCard
-                                    title="Rasio Kompresi"
-                                    value={`${result.compression_ratio}%`}
-                                    subtitle={`Hemat ${formatBytes(result.original_size - result.compressed_size)}`}
+                                    title="Kompresi Pixel Data"
+                                    value={`${result.compression_ratio.toFixed(2)}%`}
+                                    subtitle={`${formatBytes(result.original_size)} → ${formatBytes(result.compressed_size)}`}
                                     color="purple"
                                 />
                                 <StatsCard
@@ -265,6 +302,51 @@ export default function Index() {
                                     subtitle={`Entropy: ${result.entropy.toFixed(4)}`}
                                     color="orange"
                                 />
+                            </motion.div>
+
+                            {/* File Size Comparison Info */}
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: 0.25 }}
+                                className={`mb-6 p-4 rounded-lg border ${
+                                    result.file_compression_ratio > 0 
+                                        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                                        : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
+                                }`}
+                            >
+                                <p className={`text-sm ${
+                                    result.file_compression_ratio > 0 
+                                        ? 'text-green-800 dark:text-green-200'
+                                        : 'text-yellow-800 dark:text-yellow-200'
+                                }`}>
+                                    <strong>📊 Perbandingan File:</strong> File asli (JPG/PNG): <strong>{formatBytes(result.original_file_size)}</strong> → 
+                                    File compressed (.bin): <strong>{formatBytes(result.compressed_size)}</strong>
+                                    {result.file_compression_ratio > 0 ? (
+                                        <span className="text-green-600 dark:text-green-400 font-semibold"> (Hemat {result.file_compression_ratio.toFixed(2)}%)</span>
+                                    ) : (
+                                        <span className="text-red-600 dark:text-red-400 font-semibold"> (Lebih besar {Math.abs(result.file_compression_ratio).toFixed(2)}%)</span>
+                                    )}
+                                </p>
+                                <p className={`text-xs mt-2 ${
+                                    result.file_compression_ratio > 0 
+                                        ? 'text-green-600 dark:text-green-300'
+                                        : 'text-yellow-700 dark:text-yellow-300'
+                                }`}>
+                                    <strong>💡 Penjelasan:</strong> {result.file_compression_ratio > 0 ? (
+                                        <>Huffman berhasil mengompresi pixel data! Ini bagus untuk gambar dengan pola repetitif.</>
+                                    ) : (
+                                        <>
+                                            Huffman Coding bekerja pada pixel data RAW (grayscale). 
+                                            File JPG sudah terkompresi dengan algoritma DCT yang <strong>10-20x lebih efisien</strong>. 
+                                            Hasil .bin lebih besar karena: <br/>
+                                            1. Kehilangan kompresi JPG original (DCT + Quantization)<br/>
+                                            2. Overhead Huffman table (~300-500 bytes)<br/>
+                                            3. Grayscale conversion loss<br/>
+                                            <strong>Gunakan BMP/PNG sederhana untuk hasil optimal.</strong>
+                                        </>
+                                    )}
+                                </p>
                             </motion.div>
 
                             {/* Download Button */}
