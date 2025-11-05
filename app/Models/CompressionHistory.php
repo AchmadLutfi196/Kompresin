@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class CompressionHistory extends Model
 {
     protected $fillable = [
+        'user_id',
         'type',
         'filename',
         'original_path',
@@ -32,4 +33,12 @@ class CompressionHistory extends Model
         'image_width' => 'integer',
         'image_height' => 'integer',
     ];
+
+    /**
+     * Get the user that owns the compression history.
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import StatsCard from '@/components/Compression/StatsCard';
 import ImagePreview from '@/components/Compression/ImagePreview';
 import AppHeader from '@/components/AppHeader';
+import { SweetAlert } from '@/utils/sweetAlert';
 
 interface DecompressionResult {
     decompressed_image_url: string;
@@ -28,13 +29,13 @@ export default function Index() {
         const validExtensions = ['.bin', '.txt', '.json', '.zip'];
         const hasValidExtension = validExtensions.some(ext => file.name.endsWith(ext));
         if (!hasValidExtension) {
-            setError('Format file tidak valid. Gunakan file hasil kompresi (.bin, .txt, .json, atau .zip).');
+            SweetAlert.error('Format File Tidak Valid', 'Silakan gunakan file hasil kompresi (.bin, .txt, .json, atau .zip)');
             return;
         }
 
         // Validate file size (max 10MB)
         if (file.size > 10 * 1024 * 1024) {
-            setError('Ukuran file terlalu besar. Maksimal 10MB.');
+            SweetAlert.error('File Terlalu Besar', 'Ukuran file maksimal 10MB');
             return;
         }
 
@@ -45,10 +46,16 @@ export default function Index() {
 
     const handleDecompress = async (e: FormEvent) => {
         e.preventDefault();
-        if (!selectedFile) return;
+        if (!selectedFile) {
+            SweetAlert.warning('File Belum Dipilih', 'Silakan pilih file hasil kompresi terlebih dahulu');
+            return;
+        }
 
         setLoading(true);
         setError('');
+
+        // Show loading notification
+        SweetAlert.loading('Memproses Dekompresi', 'Sedang mendekompresi file menggunakan algoritma Huffman...');
 
         const formData = new FormData();
         formData.append('compressed_file', selectedFile);
@@ -65,12 +72,16 @@ export default function Index() {
             const data = await response.json();
 
             if (data.success) {
+                SweetAlert.close(); // Close loading
                 setResult(data.data);
+                
+                // Show success notification
+                SweetAlert.toast.success('Dekompresi berhasil! Gambar telah dikembalikan ke bentuk asli');
             } else {
-                setError(data.message || 'Terjadi kesalahan saat dekompresi');
+                SweetAlert.error('Dekompresi Gagal', data.message || 'Terjadi kesalahan saat memproses file');
             }
         } catch (err) {
-            setError('Terjadi kesalahan jaringan');
+            SweetAlert.error('Kesalahan Jaringan', 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda');
         } finally {
             setLoading(false);
         }

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, Head, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import AppHeader from '@/components/AppHeader';
+import { SweetAlert } from '@/utils/sweetAlert';
 
 interface HistoryItem {
     id: number;
@@ -57,11 +58,17 @@ export default function Index({ histories }: Props) {
     };
 
     const handleDelete = async (id: number) => {
-        if (!confirm('Apakah Anda yakin ingin menghapus riwayat ini?')) {
+        const result = await SweetAlert.confirmDelete(
+            'Hapus Riwayat?',
+            'Data riwayat kompresi akan dihapus permanen'
+        );
+
+        if (!result.isConfirmed) {
             return;
         }
 
         setDeletingId(id);
+        SweetAlert.loading('Menghapus Data', 'Sedang menghapus riwayat kompresi...');
 
         try {
             const response = await fetch(`/history/${id}`, {
@@ -75,13 +82,15 @@ export default function Index({ histories }: Props) {
             const data = await response.json();
 
             if (data.success) {
-                // Reload page
-                router.reload();
+                SweetAlert.close();
+                SweetAlert.toast.success('Riwayat berhasil dihapus');
+                // Reload page after a short delay
+                setTimeout(() => router.reload(), 1000);
             } else {
-                alert(data.message || 'Gagal menghapus riwayat');
+                SweetAlert.error('Gagal Menghapus', data.message || 'Terjadi kesalahan saat menghapus riwayat');
             }
         } catch (err) {
-            alert('Terjadi kesalahan jaringan');
+            SweetAlert.error('Kesalahan Jaringan', 'Tidak dapat terhubung ke server');
         } finally {
             setDeletingId(null);
         }

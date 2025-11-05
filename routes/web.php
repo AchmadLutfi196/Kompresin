@@ -22,6 +22,35 @@ Route::post('/decompress', [CompressionController::class, 'decompress'])->name('
 Route::get('/history', [CompressionController::class, 'history'])->name('history');
 Route::delete('/history/{id}', [CompressionController::class, 'deleteHistory'])->name('history.delete');
 
+// Secure file serving routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/secure/original/{id}', [CompressionController::class, 'serveOriginalFile'])->name('secure.original');
+    Route::get('/secure/compressed/{id}', [CompressionController::class, 'serveCompressedFile'])->name('secure.compressed');
+    Route::get('/secure/decompressed/{id}', [CompressionController::class, 'serveDecompressedFile'])->name('secure.decompressed');
+});
+
+// Admin Auth routes
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/login', [App\Http\Controllers\Auth\AdminAuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [App\Http\Controllers\Auth\AdminAuthController::class, 'login'])->name('login.submit');
+    Route::post('/logout', [App\Http\Controllers\Auth\AdminAuthController::class, 'logout'])->name('logout');
+});
+
+// Protected Admin routes
+Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
+    Route::get('/', [App\Http\Controllers\Admin\AdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('/history', [App\Http\Controllers\Admin\AdminController::class, 'compressionHistory'])->name('history');
+    Route::get('/files', [App\Http\Controllers\Admin\AdminController::class, 'fileManagement'])->name('files');
+    Route::get('/settings', [App\Http\Controllers\Admin\AdminController::class, 'settings'])->name('settings');
+    Route::delete('/history/{id}', [App\Http\Controllers\Admin\AdminController::class, 'deleteHistory'])->name('history.delete');
+    // POST route performs the cleanup action. Also provide a safe GET that redirects back
+    // to the admin files page to avoid MethodNotAllowed errors when someone visits the URL.
+    Route::post('/cleanup', [App\Http\Controllers\Admin\AdminController::class, 'cleanupFiles'])->name('cleanup');
+    Route::get('/cleanup', function () {
+        return redirect()->route('admin.files');
+    })->name('cleanup.get');
+});
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');

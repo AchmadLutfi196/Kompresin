@@ -5,15 +5,21 @@ import {
     HomeIcon, 
     DocumentArrowDownIcon, 
     DocumentArrowUpIcon, 
-    ClockIcon 
+    ClockIcon,
+    CpuChipIcon
 } from '@heroicons/react/24/outline';
 
 interface AppHeaderProps {
-    currentPage?: 'home' | 'compress' | 'decompress' | 'history';
+    currentPage?: 'home' | 'compress' | 'decompress' | 'history' | 'admin';
     showBackButton?: boolean;
+    user?: {
+        name: string;
+        email: string;
+        role: string;
+    };
 }
 
-export default function AppHeader({ currentPage = 'home', showBackButton = false }: AppHeaderProps) {
+export default function AppHeader({ currentPage = 'home', showBackButton = false, user }: AppHeaderProps) {
     const navigationItems = [
         {
             name: 'Beranda',
@@ -38,6 +44,12 @@ export default function AppHeader({ currentPage = 'home', showBackButton = false
             href: '/history',
             icon: ClockIcon,
             key: 'history',
+        },
+        {
+            name: 'Admin',
+            href: '/admin',
+            icon: CpuChipIcon,
+            key: 'admin',
         },
     ];
 
@@ -74,7 +86,13 @@ export default function AppHeader({ currentPage = 'home', showBackButton = false
 
                     {/* Center - Navigation (hidden on mobile) */}
                     <nav className="hidden md:flex items-center space-x-1">
-                        {navigationItems.map((item) => {
+                        {navigationItems.filter(item => {
+                            // Hide admin menu for non-admin users
+                            if (item.key === 'admin' && (!user || user.role !== 'admin')) {
+                                return false;
+                            }
+                            return true;
+                        }).map((item) => {
                             const Icon = item.icon;
                             const isActive = currentPage === item.key;
                             

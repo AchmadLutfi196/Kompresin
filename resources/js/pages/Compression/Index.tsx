@@ -6,6 +6,7 @@ import HuffmanTreeVisualization from '@/components/Compression/HuffmanTreeVisual
 import HuffmanCodeTable from '@/components/Compression/HuffmanCodeTable';
 import ImagePreview from '@/components/Compression/ImagePreview';
 import AppHeader from '@/components/AppHeader';
+import { SweetAlert } from '@/utils/sweetAlert';
 
 interface CompressionResult {
     original_size: number;
@@ -46,13 +47,13 @@ export default function Index() {
         // Validate file type
         const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/bmp'];
         if (!validTypes.includes(file.type)) {
-            setError('Format file tidak valid. Gunakan JPG, PNG, atau BMP.');
+            SweetAlert.error('Format File Tidak Valid', 'Silakan gunakan format JPG, PNG, atau BMP');
             return;
         }
 
         // Validate file size (max 10MB)
         if (file.size > 10 * 1024 * 1024) {
-            setError('Ukuran file terlalu besar. Maksimal 10MB.');
+            SweetAlert.error('File Terlalu Besar', 'Ukuran file maksimal 10MB');
             return;
         }
 
@@ -70,10 +71,16 @@ export default function Index() {
 
     const handleCompress = async (e: FormEvent) => {
         e.preventDefault();
-        if (!selectedFile) return;
+        if (!selectedFile) {
+            SweetAlert.warning('File Belum Dipilih', 'Silakan pilih file gambar terlebih dahulu');
+            return;
+        }
 
         setLoading(true);
         setError('');
+
+        // Show loading notification
+        SweetAlert.loading('Memproses Kompresi', 'Sedang mengompres gambar menggunakan algoritma Huffman...');
 
         const formData = new FormData();
         formData.append('image', selectedFile);
@@ -91,12 +98,16 @@ export default function Index() {
             const data = await response.json();
 
             if (data.success) {
+                SweetAlert.close(); // Close loading
                 setResult(data.data);
+                
+                // Show success notification
+                SweetAlert.toast.success('Kompresi berhasil! File telah dikompres dengan algoritma Huffman');
             } else {
-                setError(data.message || 'Terjadi kesalahan saat kompresi');
+                SweetAlert.error('Kompresi Gagal', data.message || 'Terjadi kesalahan saat memproses file');
             }
         } catch (err) {
-            setError('Terjadi kesalahan jaringan');
+            SweetAlert.error('Kesalahan Jaringan', 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda');
         } finally {
             setLoading(false);
         }

@@ -28,7 +28,7 @@ export default function Home() {
                     </motion.div>
 
                     {/* Important Notice */}
-                    <motion.div
+                    {/* <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: 0.15 }}
@@ -49,7 +49,7 @@ export default function Home() {
                                 </p>
                             </div>
                         </div>
-                    </motion.div>
+                    </motion.div> */}
 
                     {/* Features Grid */}
                     <div className="grid md:grid-cols-2 gap-8 mb-16">

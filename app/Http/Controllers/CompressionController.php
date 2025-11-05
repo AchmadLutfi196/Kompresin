@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\CompressionHistory;
 use App\Services\HuffmanCompressionService;
+use App\Services\FileEncryptionService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -12,10 +14,12 @@ use Inertia\Inertia;
 class CompressionController extends Controller
 {
     protected $huffmanService;
+    protected $encryptionService;
 
-    public function __construct(HuffmanCompressionService $huffmanService)
+    public function __construct(HuffmanCompressionService $huffmanService, FileEncryptionService $encryptionService)
     {
         $this->huffmanService = $huffmanService;
+        $this->encryptionService = $encryptionService;
     }
 
     /**
@@ -39,7 +43,14 @@ class CompressionController extends Controller
      */
     public function history()
     {
-        $histories = CompressionHistory::latest()->paginate(20);
+        $query = CompressionHistory::query();
+        
+        // If user is not admin, only show their own histories
+        if (!Auth::user() || Auth::user()->role !== 'admin') {
+            $query->where('user_id', Auth::id());
+        }
+        
+        $histories = $query->with('user')->latest()->paginate(20);
         
         return Inertia::render('History/Index', [
             'histories' => $histories,
@@ -89,6 +100,9 @@ class CompressionController extends Controller
             if (!file_exists($fullPath)) {
                 throw new \Exception('File stored but not found at: ' . $fullPath);
             }
+            
+            // Encrypt the uploaded file for user privacy
+            $this->encryptionService->encryptFile($originalPath, Auth::id());
 
             // Get ACTUAL file size of uploaded JPG/PNG
             $originalFileSize = filesize($fullPath);
@@ -120,6 +134,9 @@ class CompressionController extends Controller
                 ],
                 $format // Pass format parameter
             );
+            
+            // Encrypt the compressed file for user privacy
+            $this->encryptionService->encryptFile($compressedFile['path'], Auth::id());
 
             // Get Huffman codes for visualization
             $huffmanCodesVisualization = $this->huffmanService->getHuffmanCodesForVisualization();
@@ -137,6 +154,7 @@ class CompressionController extends Controller
 
             // Save to history
             $history = CompressionHistory::create([
+                'user_id' => Auth::id(),
                 'type' => 'compress',
                 'filename' => $originalFilename,
                 'original_path' => $originalPath,
@@ -164,11 +182,11 @@ class CompressionController extends Controller
                     'entropy' => round($compressionResult['entropy'], 4),
                     'width' => $compressionResult['width'],
                     'height' => $compressionResult['height'],
-                    'compressed_file_url' => $compressedFile['url'],
+                    'compressed_file_url' => route('secure.compressed', $history->id),
                     'compressed_filename' => $compressedFile['filename'],
                     'algorithm' => $compressionResult['algorithm'] ?? 'DEFLATE (LZ77 + Huffman)',
                     'compression_time' => round($compressionResult['compression_time'] ?? 0, 3),
-                    'original_image_url' => Storage::url($originalPath),
+                    'original_image_url' => route('secure.original', $history->id),
                     'huffman_tree' => $compressionResult['huffman_tree'],
                     'huffman_codes' => $huffmanCodesVisualization,
                     'history_id' => $history->id,
@@ -209,8 +227,11 @@ class CompressionController extends Controller
             $filename = $file->getClientOriginalName();
             $path = $file->storeAs('public/compressed', time() . '_' . $filename);
 
-            // Load compressed data
-            $compressedData = $this->huffmanService->loadCompressedFile($path);
+            // Encrypt the uploaded compressed file for user privacy
+            $this->encryptionService->encryptFile($path, Auth::id());
+
+            // Load compressed data (decrypt if needed)
+            $compressedData = $this->loadCompressedFileSecurely($path, Auth::id());
 
             if (!isset($compressedData['metadata']) || !isset($compressedData['encoded_data'])) {
                 throw new \Exception('Invalid compressed file format');
@@ -228,6 +249,9 @@ class CompressionController extends Controller
                 $metadata['type'],
                 $metadata['algorithm'] ?? 'DEFLATE'
             );
+            
+            // Encrypt the decompressed image for user privacy
+            $this->encryptionService->encryptFile($decompressedImage['path'], Auth::id());
 
             // Calculate file sizes
             // For compressed file, try public disk first
@@ -243,6 +267,7 @@ class CompressionController extends Controller
 
             // Save to history
             $history = CompressionHistory::create([
+                'user_id' => Auth::id(),
                 'type' => 'decompress',
                 'filename' => $filename,
                 'compressed_path' => $path,
@@ -258,7 +283,7 @@ class CompressionController extends Controller
                 'success' => true,
                 'message' => 'Image decompressed successfully',
                 'data' => [
-                    'decompressed_image_url' => $decompressedImage['url'],
+                    'decompressed_image_url' => route('secure.decompressed', $history->id),
                     'decompressed_filename' => $decompressedImage['filename'],
                     'decompression_time' => round($decompressedImage['decompression_time'] ?? 0, 3),
                     'width' => $metadata['width'],
@@ -283,7 +308,14 @@ class CompressionController extends Controller
     public function deleteHistory($id)
     {
         try {
-            $history = CompressionHistory::findOrFail($id);
+            $query = CompressionHistory::where('id', $id);
+            
+            // If user is not admin, only allow deleting their own history
+            if (!Auth::user() || Auth::user()->role !== 'admin') {
+                $query->where('user_id', Auth::id());
+            }
+            
+            $history = $query->firstOrFail();
 
             // Delete associated files
             if ($history->original_path && Storage::exists($history->original_path)) {
@@ -356,6 +388,142 @@ class CompressionController extends Controller
                 'success' => false,
                 'message' => 'Comparison failed: ' . $e->getMessage(),
             ], 500);
+        }
+    }
+
+    /**
+     * Serve original file securely (encrypted)
+     */
+    public function serveOriginalFile($id)
+    {
+        $history = CompressionHistory::findOrFail($id);
+        
+        // Check authorization - user can only access their own files
+        if (Auth::id() !== $history->user_id && (!Auth::user() || Auth::user()->role !== 'admin')) {
+            abort(403, 'Unauthorized access');
+        }
+        
+        // Admin can only see metadata, not content
+        if (Auth::user() && Auth::user()->role === 'admin' && Auth::id() !== $history->user_id) {
+            return $this->encryptionService->getFileInfoForAdmin($history->original_path);
+        }
+        
+        // User can access their own files - decrypt and serve
+        $tempFile = $this->encryptionService->decryptFileForServing($history->original_path, $history->user_id);
+        
+        if (!$tempFile) {
+            abort(404, 'File not found or decryption failed');
+        }
+        
+        return response()->file($tempFile, [
+            'Content-Disposition' => 'inline; filename="' . $history->filename . '"'
+        ])->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Serve compressed file securely
+     */
+    public function serveCompressedFile($id)
+    {
+        $history = CompressionHistory::findOrFail($id);
+        
+        // Check authorization
+        if (Auth::id() !== $history->user_id && (!Auth::user() || Auth::user()->role !== 'admin')) {
+            abort(403, 'Unauthorized access');
+        }
+        
+        // Admin can only see metadata for user files
+        if (Auth::user() && Auth::user()->role === 'admin' && Auth::id() !== $history->user_id) {
+            return $this->encryptionService->getFileInfoForAdmin($history->compressed_path);
+        }
+        
+        // Check if file is encrypted
+        if ($this->encryptionService->isEncrypted($history->compressed_path)) {
+            $tempFile = $this->encryptionService->decryptFileForServing($history->compressed_path, $history->user_id);
+            
+            if (!$tempFile) {
+                abort(404, 'File not found or decryption failed');
+            }
+            
+            $filename = pathinfo($history->compressed_path, PATHINFO_BASENAME);
+            return response()->file($tempFile, [
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"'
+            ])->deleteFileAfterSend(true);
+        }
+        
+        // Legacy: serve unencrypted file directly
+        $fullPath = Storage::path($history->compressed_path);
+        if (!file_exists($fullPath)) {
+            abort(404, 'File not found');
+        }
+        
+        return response()->file($fullPath);
+    }
+
+    /**
+     * Serve decompressed file securely
+     */
+    public function serveDecompressedFile($id)
+    {
+        $history = CompressionHistory::findOrFail($id);
+        
+        // Check authorization
+        if (Auth::id() !== $history->user_id && (!Auth::user() || Auth::user()->role !== 'admin')) {
+            abort(403, 'Unauthorized access');
+        }
+        
+        // Admin can only see metadata
+        if (Auth::user() && Auth::user()->role === 'admin' && Auth::id() !== $history->user_id) {
+            return response()->json([
+                'type' => 'decompressed_file',
+                'filename' => 'decompressed_' . $history->filename,
+                'access' => 'restricted_admin',
+                'message' => 'Content access restricted for privacy'
+            ]);
+        }
+        
+        // Check if we have a decompressed path stored
+        if (!$history->decompressed_path) {
+            abort(404, 'Decompressed file not found');
+        }
+        
+        // User can access their own files - decrypt and serve
+        $tempFile = $this->encryptionService->decryptFileForServing($history->decompressed_path, $history->user_id);
+        
+        if (!$tempFile) {
+            abort(404, 'File not found or decryption failed');
+        }
+        
+        $filename = 'decompressed_' . pathinfo($history->filename, PATHINFO_FILENAME) . '.png';
+        return response()->file($tempFile, [
+            'Content-Disposition' => 'inline; filename="' . $filename . '"'
+        ])->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Load compressed file data securely (handle encrypted files)
+     */
+    private function loadCompressedFileSecurely($path, $userId)
+    {
+        // Check if file is encrypted
+        if ($this->encryptionService->isEncrypted($path)) {
+            // Decrypt file temporarily
+            $decryptedData = $this->encryptionService->decryptFile($path, $userId);
+            
+            // Create temporary file for HuffmanService to read
+            $tempPath = 'temp/compressed_' . time() . '_' . \Illuminate\Support\Str::random(10);
+            Storage::put($tempPath, $decryptedData['content']);
+            
+            // Load using HuffmanService
+            $compressedData = $this->huffmanService->loadCompressedFile($tempPath);
+            
+            // Clean up temp file
+            Storage::delete($tempPath);
+            
+            return $compressedData;
+        } else {
+            // Legacy: load unencrypted file directly
+            return $this->huffmanService->loadCompressedFile($path);
         }
     }
 }
