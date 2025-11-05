@@ -1,6 +1,7 @@
 import { Link, Head } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import AppHeader from '@/components/AppHeader';
+import ScrambleText from '@/components/ui/ScrambleText';
 
 export default function Home() {
     // ReactBits-style animation variants
@@ -73,7 +74,9 @@ export default function Home() {
                                 backgroundClip: "text"
                             }}
                         >
-                            Kompresi Citra dengan Huffman Code
+                            <ScrambleText delay={500} speed={40}>
+                                Kompresi Citra dengan Huffman Code
+                            </ScrambleText>
                         </motion.h2>
                         <motion.p 
                             className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto"
