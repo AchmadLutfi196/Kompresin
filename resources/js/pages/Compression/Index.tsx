@@ -40,6 +40,40 @@ export default function Index() {
     const [error, setError] = useState<string>('');
     const [selectedFormat, setSelectedFormat] = useState<string>('txt');
 
+    // ReactBits-style animation variants
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                delayChildren: 0.1,
+                staggerChildren: 0.15,
+                duration: 0.6
+            }
+        }
+    };
+
+    const cardVariants = {
+        hidden: { 
+            opacity: 0, 
+            y: 30,
+            scale: 0.95
+        },
+        visible: { 
+            opacity: 1, 
+            y: 0,
+            scale: 1
+        }
+    };
+
+    const iconFloat = {
+        y: [0, -8, 0],
+        transition: {
+            duration: 2.5,
+            repeat: Infinity
+        }
+    };
+
     const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -128,10 +162,14 @@ export default function Index() {
             <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-gray-900 dark:to-gray-800">
                 <AppHeader currentPage="compress" showBackButton />
 
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <motion.div 
+                    className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                >
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
+                        variants={cardVariants}
                         className="mb-8"
                     >
                         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -144,17 +182,19 @@ export default function Index() {
 
                     {/* Warning Box - Important Info */}
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.05 }}
-                        className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-5 mb-6"
+                        variants={cardVariants}
+                        whileHover={{ scale: 1.02, y: -2 }}
+                        className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-5 mb-6 backdrop-blur-sm"
                     >
                         <div className="flex gap-3">
-                            <div className="flex-shrink-0">
+                            <motion.div 
+                                className="flex-shrink-0"
+                                animate={iconFloat}
+                            >
                                 <svg className="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                 </svg>
-                            </div>
+                            </motion.div>
                             <div className="flex-1">
                                 <h3 className="text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
                                     ⚠️ Penting: Keterbatasan Huffman Coding untuk Gambar
@@ -177,10 +217,9 @@ export default function Index() {
 
                     {/* Upload Form */}
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8"
+                        variants={cardVariants}
+                        whileHover={{ scale: 1.01, y: -4 }}
+                        className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-lg shadow-lg border border-white/20 p-6 mb-8"
                     >
                         <form onSubmit={handleCompress}>
                             <div className="mb-4">
@@ -188,7 +227,12 @@ export default function Index() {
                                     Pilih Gambar
                                 </label>
                                 <div className="flex items-center justify-center w-full">
-                                    <label className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800">
+                                    <motion.label 
+                                        className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                        whileHover={{ scale: 1.02, borderColor: '#14b8a6' }}
+                                        whileTap={{ scale: 0.98 }}
+                                        transition={{ duration: 0.2 }}
+                                    >
                                         {previewUrl ? (
                                             <img
                                                 src={previewUrl}
@@ -197,7 +241,8 @@ export default function Index() {
                                             />
                                         ) : (
                                             <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                                <svg
+                                                <motion.svg
+                                                    animate={iconFloat}
                                                     className="w-12 h-12 mb-4 text-gray-400"
                                                     fill="none"
                                                     stroke="currentColor"
@@ -209,7 +254,7 @@ export default function Index() {
                                                         strokeWidth={2}
                                                         d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                                                     />
-                                                </svg>
+                                                </motion.svg>
                                                 <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
                                                     <span className="font-semibold">Klik untuk upload</span> atau drag and drop
                                                 </p>
@@ -224,7 +269,7 @@ export default function Index() {
                                             accept="image/jpeg,image/jpg,image/png,image/bmp"
                                             onChange={handleFileSelect}
                                         />
-                                    </label>
+                                    </motion.label>
                                 </div>
                                 {selectedFile && (
                                     <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
@@ -238,8 +283,13 @@ export default function Index() {
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                                     Pilih Format File Hasil Kompresi
                                 </label>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                    <button
+                                <motion.div 
+                                    className="grid grid-cols-2 md:grid-cols-4 gap-3"
+                                    variants={containerVariants}
+                                    initial="hidden"
+                                    animate="visible"
+                                >
+                                    <motion.button
                                         type="button"
                                         onClick={() => setSelectedFormat('txt')}
                                         className={`relative flex flex-col items-center p-4 rounded-lg border-2 transition-all ${
@@ -247,6 +297,9 @@ export default function Index() {
                                                 ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20 shadow-lg'
                                                 : 'border-gray-300 dark:border-gray-600 hover:border-teal-300'
                                         }`}
+                                        variants={cardVariants}
+                                        whileHover={{ scale: 1.05, y: -2 }}
+                                        whileTap={{ scale: 0.95 }}
                                     >
                                         <svg className="w-8 h-8 mb-2 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -260,9 +313,9 @@ export default function Index() {
                                                 </svg>
                                             </div>
                                         )}
-                                    </button>
+                                    </motion.button>
 
-                                    <button
+                                    <motion.button
                                         type="button"
                                         onClick={() => setSelectedFormat('json')}
                                         className={`relative flex flex-col items-center p-4 rounded-lg border-2 transition-all ${
@@ -270,6 +323,9 @@ export default function Index() {
                                                 ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20 shadow-lg'
                                                 : 'border-gray-300 dark:border-gray-600 hover:border-cyan-300'
                                         }`}
+                                        variants={cardVariants}
+                                        whileHover={{ scale: 1.05, y: -2 }}
+                                        whileTap={{ scale: 0.95 }}
                                     >
                                         <svg className="w-8 h-8 mb-2 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
@@ -283,9 +339,9 @@ export default function Index() {
                                                 </svg>
                                             </div>
                                         )}
-                                    </button>
+                                    </motion.button>
 
-                                    <button
+                                    <motion.button
                                         type="button"
                                         onClick={() => setSelectedFormat('zip')}
                                         className={`relative flex flex-col items-center p-4 rounded-lg border-2 transition-all ${
@@ -293,6 +349,9 @@ export default function Index() {
                                                 ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 shadow-lg'
                                                 : 'border-gray-300 dark:border-gray-600 hover:border-purple-300'
                                         }`}
+                                        variants={cardVariants}
+                                        whileHover={{ scale: 1.05, y: -2 }}
+                                        whileTap={{ scale: 0.95 }}
                                     >
                                         <svg className="w-8 h-8 mb-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
@@ -306,9 +365,9 @@ export default function Index() {
                                                 </svg>
                                             </div>
                                         )}
-                                    </button>
+                                    </motion.button>
 
-                                    <button
+                                    <motion.button
                                         type="button"
                                         onClick={() => setSelectedFormat('bin')}
                                         className={`relative flex flex-col items-center p-4 rounded-lg border-2 transition-all ${
@@ -316,6 +375,9 @@ export default function Index() {
                                                 ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20 shadow-lg'
                                                 : 'border-gray-300 dark:border-gray-600 hover:border-orange-300'
                                         }`}
+                                        variants={cardVariants}
+                                        whileHover={{ scale: 1.05, y: -2 }}
+                                        whileTap={{ scale: 0.95 }}
                                     >
                                         <svg className="w-8 h-8 mb-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
@@ -329,8 +391,8 @@ export default function Index() {
                                                 </svg>
                                             </div>
                                         )}
-                                    </button>
-                                </div>
+                                    </motion.button>
+                                </motion.div>
                                 <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                                     💡 TXT & JSON: Mudah dibaca | ZIP: Kompatibel universal | BIN: Ukuran minimal
                                 </p>
@@ -380,15 +442,21 @@ export default function Index() {
 
                     {/* Results */}
                     {result && (
-                        <>
+                        <motion.div
+                            variants={containerVariants}
+                            initial="hidden"
+                            animate="visible"
+                        >
                             {/* Statistics */}
                             <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.2, staggerChildren: 0.1 }}
+                                variants={containerVariants}
                                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
                             >
-                                <motion.div whileHover={{ y: -5 }} transition={{ type: "spring", stiffness: 300 }}>
+                                <motion.div 
+                                    variants={cardVariants}
+                                    whileHover={{ y: -5, scale: 1.02 }} 
+                                    transition={{ type: "spring", stiffness: 300 }}
+                                >
                                     <StatsCard
                                         title="File Asli (JPG/PNG)"
                                         value={formatBytes(result.original_file_size)}
@@ -401,7 +469,11 @@ export default function Index() {
                                         }
                                     />
                                 </motion.div>
-                                <motion.div whileHover={{ y: -5 }} transition={{ type: "spring", stiffness: 300 }}>
+                                <motion.div 
+                                    variants={cardVariants}
+                                    whileHover={{ y: -5, scale: 1.02 }} 
+                                    transition={{ type: "spring", stiffness: 300 }}
+                                >
                                     <StatsCard
                                         title="File Kompres (.bin)"
                                         value={formatBytes(result.compressed_size)}
@@ -416,7 +488,11 @@ export default function Index() {
                                         }
                                     />
                                 </motion.div>
-                                <motion.div whileHover={{ y: -5 }} transition={{ type: "spring", stiffness: 300 }}>
+                                <motion.div 
+                                    variants={cardVariants}
+                                    whileHover={{ y: -5, scale: 1.02 }} 
+                                    transition={{ type: "spring", stiffness: 300 }}
+                                >
                                     <StatsCard
                                         title="Kompresi Pixel Data"
                                         value={`${result.compression_ratio.toFixed(2)}%`}
@@ -429,7 +505,11 @@ export default function Index() {
                                         }
                                     />
                                 </motion.div>
-                                <motion.div whileHover={{ y: -5 }} transition={{ type: "spring", stiffness: 300 }}>
+                                <motion.div 
+                                    variants={cardVariants}
+                                    whileHover={{ y: -5, scale: 1.02 }} 
+                                    transition={{ type: "spring", stiffness: 300 }}
+                                >
                                     <StatsCard
                                         title="Bits Per Pixel"
                                         value={result.bits_per_pixel.toFixed(4)}
@@ -565,15 +645,14 @@ export default function Index() {
 
                             {/* Huffman Code Table */}
                             <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.6 }}
+                                variants={cardVariants}
+                                whileHover={{ scale: 1.01, y: -2 }}
                             >
                                 <HuffmanCodeTable codes={result.huffman_codes} />
                             </motion.div>
-                        </>
+                        </motion.div>
                     )}
-                </div>
+                </motion.div>
             </div>
         </>
     );

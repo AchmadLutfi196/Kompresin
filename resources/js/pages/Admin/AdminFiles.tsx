@@ -40,6 +40,31 @@ const AdminFiles: React.FC<AdminFilesProps> = ({ files, storageUsed, totalFiles,
     const [loading, setLoading] = useState(false);
     const [cleanupDays, setCleanupDays] = useState(30);
 
+    // ReactBits-style animation variants
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                delayChildren: 0.1,
+                staggerChildren: 0.05
+            }
+        }
+    };
+
+    const cardVariants = {
+        hidden: { 
+            opacity: 0, 
+            y: 20,
+            scale: 0.95
+        },
+        visible: { 
+            opacity: 1, 
+            y: 0,
+            scale: 1
+        }
+    };
+
     // Show success message if cleanup was just completed
     useEffect(() => {
         if (message && deletedFiles !== undefined) {
@@ -164,9 +189,9 @@ const AdminFiles: React.FC<AdminFilesProps> = ({ files, storageUsed, totalFiles,
 
             <motion.div 
                 className="p-6 pt-24"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
+                initial="hidden"
+                animate="visible"
+                variants={containerVariants}
             >
                 <div className="max-w-7xl mx-auto space-y-6">
                     {/* Header */}
