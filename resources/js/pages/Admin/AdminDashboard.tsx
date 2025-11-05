@@ -89,14 +89,20 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ stats, user }) => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700">
             <Head title="Admin Dashboard" />
             
             <AdminHeader currentPage="dashboard" user={user} />
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Welcome Section */}
-                <motion.div
+            <motion.div 
+                className="p-6 pt-24"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+            >
+                <div className="max-w-7xl mx-auto space-y-6">
+                    {/* Welcome Section */}
+                    <motion.div
                     initial="hidden"
                     animate="visible"
                     variants={cardVariants}
@@ -284,7 +290,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ stats, user }) => {
                         )}
                     </div>
                 </motion.div>
-            </div>
+                </div>
+            </motion.div>
         </div>
     );
 };

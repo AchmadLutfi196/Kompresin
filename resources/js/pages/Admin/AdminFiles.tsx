@@ -158,25 +158,31 @@ const AdminFiles: React.FC<AdminFilesProps> = ({ files, storageUsed, totalFiles,
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-teal-50 via-cyan-50 to-blue-50">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700">
             <Head title="Admin File Management" />
             <AdminHeader currentPage="files" user={user} />
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Header */}
-                <div className="mb-8">
+            <motion.div 
+                className="p-6 pt-24"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+            >
+                <div className="max-w-7xl mx-auto space-y-6">
+                    {/* Header */}
+                    <div className="mb-8">
                     <motion.h1 
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-3xl font-bold text-gray-900 mb-2"
+                        className="text-3xl font-bold text-gray-900 dark:text-white mb-2"
                     >
-                        File Management
+                        Kelola File
                     </motion.h1>
                     <motion.p 
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="text-gray-600"
+                        className="text-gray-600 dark:text-gray-400"
                     >
                         Kelola file storage dan lakukan cleanup otomatis
                     </motion.p>
@@ -189,32 +195,32 @@ const AdminFiles: React.FC<AdminFilesProps> = ({ files, storageUsed, totalFiles,
                     transition={{ delay: 0.2 }}
                     className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
                 >
-                    <div className="bg-white border border-teal-100 rounded-xl p-6 shadow-sm">
+                    <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-6">
                         <div className="flex items-center">
-                            <ServerStackIcon className="w-8 h-8 text-teal-600 mr-4" />
+                            <ServerStackIcon className="w-8 h-8 text-teal-600 dark:text-teal-400 mr-4" />
                             <div>
-                                <p className="text-sm font-medium text-gray-600">Storage Terpakai</p>
-                                <p className="text-2xl font-bold text-gray-900">{storageUsed}</p>
+                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Storage Terpakai</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white">{storageUsed}</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white border border-teal-100 rounded-xl p-6 shadow-sm">
+                    <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-6">
                         <div className="flex items-center">
-                            <DocumentIcon className="w-8 h-8 text-cyan-600 mr-4" />
+                            <DocumentIcon className="w-8 h-8 text-cyan-600 dark:text-cyan-400 mr-4" />
                             <div>
-                                <p className="text-sm font-medium text-gray-600">Total File</p>
-                                <p className="text-2xl font-bold text-gray-900">{totalFiles}</p>
+                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total File</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white">{totalFiles}</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white border border-teal-100 rounded-xl p-6 shadow-sm">
+                    <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-6">
                         <div className="flex items-center">
-                            <FolderIcon className="w-8 h-8 text-blue-600 mr-4" />
+                            <FolderIcon className="w-8 h-8 text-blue-600 dark:text-blue-400 mr-4" />
                             <div>
-                                <p className="text-sm font-medium text-gray-600">File Terpilih</p>
-                                <p className="text-2xl font-bold text-gray-900">{selectedFiles.length}</p>
+                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">File Terpilih</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white">{selectedFiles.length}</p>
                             </div>
                         </div>
                     </div>
@@ -225,23 +231,23 @@ const AdminFiles: React.FC<AdminFilesProps> = ({ files, storageUsed, totalFiles,
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="bg-white border border-teal-100 rounded-xl p-6 mb-8 shadow-sm"
+                    className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-6 mb-8"
                 >
                     <div className="flex items-center mb-4">
-                        <ExclamationTriangleIcon className="w-6 h-6 text-orange-500 mr-2" />
-                        <h2 className="text-xl font-semibold text-gray-900">Cleanup Otomatis</h2>
+                        <ExclamationTriangleIcon className="w-6 h-6 text-orange-500 dark:text-orange-400 mr-2" />
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Cleanup Otomatis</h2>
                     </div>
                     
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                         <div className="flex items-center gap-3">
-                            <ClockIcon className="w-5 h-5 text-gray-400" />
-                            <label className="text-sm font-medium text-gray-700">
+                            <ClockIcon className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Hapus file lebih dari:
                             </label>
                             <select
                                 value={cleanupDays}
                                 onChange={(e) => setCleanupDays(Number(e.target.value))}
-                                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                             >
                                 <option value={7}>7 hari</option>
                                 <option value={30}>30 hari</option>
@@ -272,20 +278,20 @@ const AdminFiles: React.FC<AdminFilesProps> = ({ files, storageUsed, totalFiles,
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}
-                    className="bg-white border border-teal-100 rounded-xl shadow-sm overflow-hidden"
+                    className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 overflow-hidden"
                 >
-                    <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-teal-50 to-cyan-50">
+                    <div className="px-6 py-4 border-b border-gray-200/50 dark:border-gray-700/50 bg-gray-50/50 dark:bg-gray-700/50">
                         <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-semibold text-gray-900">File Storage</h3>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">File Storage</h3>
                             <div className="flex items-center gap-4">
                                 <label className="flex items-center">
                                     <input
                                         type="checkbox"
                                         checked={selectedFiles.length === files.length && files.length > 0}
                                         onChange={handleSelectAll}
-                                        className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                                        className="rounded border-gray-300 dark:border-gray-600 text-teal-600 focus:ring-teal-500 bg-white dark:bg-gray-700"
                                     />
-                                    <span className="ml-2 text-sm text-gray-600">Pilih Semua</span>
+                                    <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">Pilih Semua</span>
                                 </label>
                             </div>
                         </div>
@@ -293,19 +299,19 @@ const AdminFiles: React.FC<AdminFilesProps> = ({ files, storageUsed, totalFiles,
 
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-gray-50">
+                            <thead className="bg-gray-50 dark:bg-gray-700">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         <input type="checkbox" className="opacity-0" />
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama File</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Modified</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Age</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nama File</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Size</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Modified</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Age</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
+                            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                 {files.length > 0 ? (
                                     files.map((file, index) => {
                                         const FileIcon = getFileIcon(file.name, file.type);
@@ -318,26 +324,26 @@ const AdminFiles: React.FC<AdminFilesProps> = ({ files, storageUsed, totalFiles,
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: 0.1 * index }}
-                                                className={`hover:bg-gray-50 transition-colors duration-150 ${isOld ? 'bg-orange-50' : ''}`}
+                                                className={`hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150 ${isOld ? 'bg-orange-50 dark:bg-orange-900/20' : ''}`}
                                             >
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <input
                                                         type="checkbox"
                                                         checked={selectedFiles.includes(file.path)}
                                                         onChange={() => handleFileSelect(file.path)}
-                                                        className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                                                        className="rounded border-gray-300 dark:border-gray-600 text-teal-600 focus:ring-teal-500 bg-white dark:bg-gray-700"
                                                     />
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="flex items-center">
-                                                        <FileIcon className={`w-5 h-5 mr-3 ${file.type === 'directory' ? 'text-blue-500' : 'text-gray-400'}`} />
-                                                        <span className="text-sm font-medium text-gray-900">{file.name}</span>
+                                                        <FileIcon className={`w-5 h-5 mr-3 ${file.type === 'directory' ? 'text-blue-500 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500'}`} />
+                                                        <span className="text-sm font-medium text-gray-900 dark:text-white">{file.name}</span>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                                     {file.type === 'file' ? formatFileSize(file.size) : '-'}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                                     {formatDate(file.modified)}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -356,7 +362,7 @@ const AdminFiles: React.FC<AdminFilesProps> = ({ files, storageUsed, totalFiles,
                                                                 whileHover={{ scale: 1.1 }}
                                                                 whileTap={{ scale: 0.9 }}
                                                                 onClick={() => showPrivacyInfo(file.name)}
-                                                                className="text-amber-600 hover:text-amber-900 p-1 rounded-full hover:bg-amber-50 transition-colors duration-150"
+                                                                className="text-amber-600 hover:text-amber-900 dark:text-amber-400 dark:hover:text-amber-300 p-1 rounded-full hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors duration-150"
                                                                 title="File diproteksi untuk privasi pengguna"
                                                             >
                                                                 <ShieldCheckIcon className="w-5 h-5" />
@@ -379,7 +385,8 @@ const AdminFiles: React.FC<AdminFilesProps> = ({ files, storageUsed, totalFiles,
                         </table>
                     </div>
                 </motion.div>
-            </div>
+                </div>
+            </motion.div>
         </div>
     );
 };

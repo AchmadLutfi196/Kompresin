@@ -2,11 +2,13 @@
 
 ## 🎨 Masalah yang Diperbaiki
 
-**Sebelum:**
-- ❌ Header navigation berbeda di setiap halaman
-- ❌ Warna tema tidak konsisten (biru, hijau, random colors)
-- ❌ Background gradient berbeda-beda  
-- ❌ Komponen UI terpisah-pisah
+**Admin Pages Theme Inconsistency:**
+- ❌ AdminDashboard: Gray gradient with dark mode support ✅
+- ❌ AdminHistory: Teal-cyan-blue gradient (light only) ❌
+- ❌ AdminFiles: Teal-cyan-blue gradient (light only) ❌  
+- ❌ AdminSettings: Teal-cyan-blue gradient (light only) ❌
+- ❌ Tidak ada dark mode support yang konsisten
+- ❌ Text colors tidak mendukung dark mode
 
 **Setelah:**
 - ✅ Header navigation yang konsisten dengan AppHeader component
