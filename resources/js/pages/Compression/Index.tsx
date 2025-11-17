@@ -229,7 +229,7 @@ export default function Index() {
                                 <div className="flex items-center justify-center w-full">
                                     <motion.label 
                                         className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800"
-                                        whileHover={{ scale: 1.02, borderColor: '#14b8a6' }}
+                                        whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                         transition={{ duration: 0.2 }}
                                     >

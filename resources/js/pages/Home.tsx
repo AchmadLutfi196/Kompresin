@@ -1,9 +1,46 @@
 import { Link, Head } from '@inertiajs/react';
 import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
 import AppHeader from '@/components/AppHeader';
-import ScrambleText from '@/components/ui/ScrambleText';
 
 export default function Home() {
+    const [displayText, setDisplayText] = useState('');
+    const finalText = 'Kompresi Citra dengan Huffman Code';
+    
+    useEffect(() => {
+        let iteration = 0;
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,.<>?';
+        
+        const scrambleInterval = setInterval(() => {
+            setDisplayText(prev => {
+                return finalText
+                    .split('')
+                    .map((char, index) => {
+                        if (char === ' ') return ' ';
+                        if (index < iteration) return finalText[index];
+                        return characters[Math.floor(Math.random() * characters.length)];
+                    })
+                    .join('');
+            });
+
+            if (iteration >= finalText.length) {
+                clearInterval(scrambleInterval);
+                setDisplayText(finalText);
+            }
+
+            iteration += 1 / 3;
+        }, 30);
+
+        const startTimer = setTimeout(() => {
+            iteration = 0;
+        }, 1000);
+
+        return () => {
+            clearInterval(scrambleInterval);
+            clearTimeout(startTimer);
+        };
+    }, []);
+
     // ReactBits-style animation variants
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -74,9 +111,7 @@ export default function Home() {
                                 backgroundClip: "text"
                             }}
                         >
-                            <ScrambleText delay={500} speed={40}>
-                                Kompresi Citra dengan Huffman Code
-                            </ScrambleText>
+                            <span className="font-mono">{displayText || finalText}</span>
                         </motion.h2>
                         <motion.p 
                             className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto"

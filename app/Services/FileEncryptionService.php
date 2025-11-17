@@ -23,11 +23,15 @@ class FileEncryptionService
      */
     public function encryptFile(string $filePath, int $userId): array
     {
-        if (!Storage::exists($filePath)) {
+        // Determine which disk to use based on the file path
+        $disk = $this->getDiskForPath($filePath);
+        $actualPath = $this->getActualPathForDisk($filePath, $disk);
+        
+        if (!Storage::disk($disk)->exists($actualPath)) {
             throw new \Exception('File not found: ' . $filePath);
         }
 
-        $content = Storage::get($filePath);
+        $content = Storage::disk($disk)->get($actualPath);
         $key = $this->generateUserKey($userId);
         
         // Generate a random IV for each encryption
@@ -44,11 +48,11 @@ class FileEncryptionService
         $finalContent = base64_encode($iv . $encryptedContent);
         
         // Save encrypted file with .enc extension
-        $encryptedPath = $filePath . '.enc';
-        Storage::put($encryptedPath, $finalContent);
+        $encryptedPath = $actualPath . '.enc';
+        Storage::disk($disk)->put($encryptedPath, $finalContent);
 
         return [
-            'encrypted_path' => $encryptedPath,
+            'encrypted_path' => $filePath . '.enc',
             'original_path' => $filePath,
             'size' => strlen($finalContent)
         ];
@@ -59,11 +63,15 @@ class FileEncryptionService
      */
     public function decryptFile(string $encryptedPath, int $userId): array
     {
-        if (!Storage::exists($encryptedPath)) {
+        // Determine which disk to use based on the file path
+        $disk = $this->getDiskForPath($encryptedPath);
+        $actualPath = $this->getActualPathForDisk($encryptedPath, $disk);
+        
+        if (!Storage::disk($disk)->exists($actualPath)) {
             throw new \Exception('Encrypted file not found: ' . $encryptedPath);
         }
 
-        $encryptedData = Storage::get($encryptedPath);
+        $encryptedData = Storage::disk($disk)->get($actualPath);
         $key = $this->generateUserKey($userId);
         
         // Decode the base64 content
@@ -84,7 +92,7 @@ class FileEncryptionService
             throw new \Exception('Decryption failed - user may not have access to this file');
         }
 
-        // Create temporary decrypted file for download
+        // Create temporary decrypted file for download (use default disk for temp files)
         $tempPath = 'temp/decrypted_' . time() . '_' . Str::random(10);
         Storage::put($tempPath, $decryptedContent);
 
@@ -122,12 +130,15 @@ class FileEncryptionService
      */
     public function getFileInfoForAdmin(string $filePath): array
     {
-        if (!Storage::exists($filePath)) {
+        $disk = $this->getDiskForPath($filePath);
+        $actualPath = $this->getActualPathForDisk($filePath, $disk);
+        
+        if (!Storage::disk($disk)->exists($actualPath)) {
             throw new \Exception('File not found: ' . $filePath);
         }
 
-        $size = Storage::size($filePath);
-        $lastModified = Storage::lastModified($filePath);
+        $size = Storage::disk($disk)->size($actualPath);
+        $lastModified = Storage::disk($disk)->lastModified($actualPath);
 
         return [
             'path' => $filePath,
@@ -162,7 +173,10 @@ class FileEncryptionService
      */
     public function migrateToEncrypted(string $originalPath, int $userId): array
     {
-        if (!Storage::exists($originalPath)) {
+        $disk = $this->getDiskForPath($originalPath);
+        $actualPath = $this->getActualPathForDisk($originalPath, $disk);
+        
+        if (!Storage::disk($disk)->exists($actualPath)) {
             throw new \Exception('Original file not found: ' . $originalPath);
         }
 
@@ -170,8 +184,35 @@ class FileEncryptionService
         $result = $this->encryptFile($originalPath, $userId);
         
         // Delete original file after successful encryption
-        Storage::delete($originalPath);
+        Storage::disk($disk)->delete($actualPath);
         
         return $result;
+    }
+
+    /**
+     * Determine which disk to use based on file path
+     */
+    private function getDiskForPath(string $filePath): string
+    {
+        // If path starts with 'public/', use the public disk
+        if (str_starts_with($filePath, 'public/')) {
+            return 'public';
+        }
+        
+        // Otherwise use the default disk
+        return config('filesystems.default', 'local');
+    }
+
+    /**
+     * Get the actual path for the specified disk
+     */
+    private function getActualPathForDisk(string $filePath, string $disk): string
+    {
+        // If using public disk and path starts with 'public/', remove the prefix
+        if ($disk === 'public' && str_starts_with($filePath, 'public/')) {
+            return substr($filePath, 7); // Remove 'public/' prefix
+        }
+        
+        return $filePath;
     }
 }

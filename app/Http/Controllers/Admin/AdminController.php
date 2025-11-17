@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CompressionHistory;
 use App\Models\User;
 use App\Services\FileEncryptionService;
+use App\Traits\HandlesDiskPaths;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -14,6 +15,8 @@ use Inertia\Inertia;
 
 class AdminController extends Controller
 {
+    use HandlesDiskPaths;
+    
     protected $encryptionService;
 
     public function __construct(FileEncryptionService $encryptionService)
@@ -86,12 +89,12 @@ class AdminController extends Controller
     {
         $history = CompressionHistory::findOrFail($id);
         
-        // Delete associated files
-        if ($history->compressed_path && Storage::exists($history->compressed_path)) {
-            Storage::delete($history->compressed_path);
+        // Delete associated files using correct disk logic
+        if ($history->compressed_path && $this->fileExistsOnCorrectDisk($history->compressed_path)) {
+            $this->deleteFileOnCorrectDisk($history->compressed_path);
         }
-        if ($history->decompressed_path && Storage::exists($history->decompressed_path)) {
-            Storage::delete($history->decompressed_path);
+        if ($history->decompressed_path && $this->fileExistsOnCorrectDisk($history->decompressed_path)) {
+            $this->deleteFileOnCorrectDisk($history->decompressed_path);
         }
         
         $history->delete();

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\CompressionHistory;
 use App\Services\HuffmanCompressionService;
 use App\Services\FileEncryptionService;
+use App\Traits\HandlesDiskPaths;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -13,6 +14,8 @@ use Inertia\Inertia;
 
 class CompressionController extends Controller
 {
+    use HandlesDiskPaths;
+    
     protected $huffmanService;
     protected $encryptionService;
 
@@ -83,26 +86,30 @@ class CompressionController extends Controller
                 ], 422);
             }
             
-            // Create directory if not exists
-            Storage::makeDirectory('public/originals');
+            // Create directory if not exists (use public disk explicitly)
+            Storage::disk('public')->makeDirectory('originals');
             
-            $originalPath = $image->storeAs('public/originals', time() . '_' . $originalFilename);
+            $originalPath = $image->storeAs('originals', time() . '_' . $originalFilename, 'public');
+            // Add public/ prefix to path for consistency with other file paths
+            $originalPath = 'public/' . $originalPath;
             
-            // Verify file exists using Storage facade
-            if (!Storage::exists($originalPath)) {
+            // Verify file exists using correct disk
+            if (!$this->fileExistsOnCorrectDisk($originalPath)) {
                 throw new \Exception('Failed to store uploaded file: ' . $originalPath);
             }
             
-            // Get full path using Storage::path() - this returns proper Windows path
-            $fullPath = Storage::path($originalPath);
+            // Get full path using correct disk
+            $fullPath = $this->getFullPathOnCorrectDisk($originalPath);
             
             // Verify physical file exists
             if (!file_exists($fullPath)) {
                 throw new \Exception('File stored but not found at: ' . $fullPath);
             }
             
-            // Encrypt the uploaded file for user privacy
-            $this->encryptionService->encryptFile($originalPath, Auth::id());
+            // Encrypt the uploaded file for user privacy (only for authenticated users)
+            if (Auth::id()) {
+                $this->encryptionService->encryptFile($originalPath, Auth::id());
+            }
 
             // Get ACTUAL file size of uploaded JPG/PNG
             $originalFileSize = filesize($fullPath);
@@ -135,8 +142,10 @@ class CompressionController extends Controller
                 $format // Pass format parameter
             );
             
-            // Encrypt the compressed file for user privacy
-            $this->encryptionService->encryptFile($compressedFile['path'], Auth::id());
+            // Encrypt the compressed file for user privacy (only for authenticated users)
+            if (Auth::id()) {
+                $this->encryptionService->encryptFile($compressedFile['path'], Auth::id());
+            }
 
             // Get Huffman codes for visualization
             $huffmanCodesVisualization = $this->huffmanService->getHuffmanCodesForVisualization();
@@ -154,7 +163,7 @@ class CompressionController extends Controller
 
             // Save to history
             $history = CompressionHistory::create([
-                'user_id' => Auth::id(),
+                'user_id' => Auth::id(), // null for guest users
                 'type' => 'compress',
                 'filename' => $originalFilename,
                 'original_path' => $originalPath,
@@ -227,11 +236,13 @@ class CompressionController extends Controller
             $filename = $file->getClientOriginalName();
             $path = $file->storeAs('public/compressed', time() . '_' . $filename);
 
-            // Encrypt the uploaded compressed file for user privacy
-            $this->encryptionService->encryptFile($path, Auth::id());
+            // Encrypt the uploaded compressed file for user privacy (only for authenticated users)
+            if (Auth::id()) {
+                $this->encryptionService->encryptFile($path, Auth::id());
+            }
 
             // Load compressed data (decrypt if needed)
-            $compressedData = $this->loadCompressedFileSecurely($path, Auth::id());
+            $compressedData = $this->loadCompressedFileSecurely($path, Auth::id() ?? 0);
 
             if (!isset($compressedData['metadata']) || !isset($compressedData['encoded_data'])) {
                 throw new \Exception('Invalid compressed file format');
@@ -250,8 +261,10 @@ class CompressionController extends Controller
                 $metadata['algorithm'] ?? 'DEFLATE'
             );
             
-            // Encrypt the decompressed image for user privacy
-            $this->encryptionService->encryptFile($decompressedImage['path'], Auth::id());
+            // Encrypt the decompressed image for user privacy (only for authenticated users)
+            if (Auth::id()) {
+                $this->encryptionService->encryptFile($decompressedImage['path'], Auth::id());
+            }
 
             // Calculate file sizes
             // For compressed file, try public disk first
@@ -267,7 +280,7 @@ class CompressionController extends Controller
 
             // Save to history
             $history = CompressionHistory::create([
-                'user_id' => Auth::id(),
+                'user_id' => Auth::id(), // null for guest users
                 'type' => 'decompress',
                 'filename' => $filename,
                 'compressed_path' => $path,
@@ -317,15 +330,15 @@ class CompressionController extends Controller
             
             $history = $query->firstOrFail();
 
-            // Delete associated files
-            if ($history->original_path && Storage::exists($history->original_path)) {
-                Storage::delete($history->original_path);
+            // Delete associated files using correct disk logic
+            if ($history->original_path && $this->fileExistsOnCorrectDisk($history->original_path)) {
+                $this->deleteFileOnCorrectDisk($history->original_path);
             }
-            if ($history->compressed_path && Storage::exists($history->compressed_path)) {
-                Storage::delete($history->compressed_path);
+            if ($history->compressed_path && $this->fileExistsOnCorrectDisk($history->compressed_path)) {
+                $this->deleteFileOnCorrectDisk($history->compressed_path);
             }
-            if ($history->decompressed_path && Storage::exists($history->decompressed_path)) {
-                Storage::delete($history->decompressed_path);
+            if ($history->decompressed_path && $this->fileExistsOnCorrectDisk($history->decompressed_path)) {
+                $this->deleteFileOnCorrectDisk($history->decompressed_path);
             }
 
             $history->delete();
@@ -452,7 +465,7 @@ class CompressionController extends Controller
         }
         
         // Legacy: serve unencrypted file directly
-        $fullPath = Storage::path($history->compressed_path);
+        $fullPath = $this->getFullPathOnCorrectDisk($history->compressed_path);
         if (!file_exists($fullPath)) {
             abort(404, 'File not found');
         }
