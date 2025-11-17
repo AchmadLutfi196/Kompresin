@@ -11,6 +11,30 @@ class HuffmanCompressionService
     private $frequencyTable = [];
 
     /**
+     * Convert RGB pixel data to grayscale for better compression
+     */
+    private function convertToGrayscale($pixelData, $width, $height)
+    {
+        $grayscaleData = '';
+        $pixelCount = $width * $height;
+        
+        for ($i = 0; $i < $pixelCount; $i++) {
+            $offset = $i * 3; // RGB = 3 bytes per pixel
+            if ($offset + 2 < strlen($pixelData)) {
+                $r = ord($pixelData[$offset]);
+                $g = ord($pixelData[$offset + 1]);
+                $b = ord($pixelData[$offset + 2]);
+                
+                // Convert to grayscale using luminance formula
+                $gray = (int)(0.299 * $r + 0.587 * $g + 0.114 * $b);
+                $grayscaleData .= chr($gray);
+            }
+        }
+        
+        return $grayscaleData;
+    }
+
+    /**
      * Compress an image using DEFLATE (LZ77 + Huffman) - industry standard
      */
     public function compress($imagePath)
@@ -50,14 +74,16 @@ class HuffmanCompressionService
         // Get pixel data
         $pixelData = $this->getPixelData($imageData['resource'], $imageData['width'], $imageData['height']);
         
-        // Use DEFLATE compression (LZ77 + Huffman) - same as gzip
-        // Level 9 = maximum compression
+        // Apply simple grayscale conversion first to reduce data
+        $grayscaleData = $this->convertToGrayscale($pixelData, $imageData['width'], $imageData['height']);
+        
+        // Use highest compression level with gzcompress
         $startTime = microtime(true);
-        $compressedData = gzcompress($pixelData, 9);
+        $compressedData = gzcompress($grayscaleData, 9);
         $compressionTime = microtime(true) - $startTime;
         
-        // Calculate statistics before building visualization (to save memory)
-        $originalSize = strlen($pixelData);
+        // Calculate statistics
+        $originalSize = strlen($grayscaleData); // Use grayscale size as baseline
         $compressedSize = strlen($compressedData);
         $compressionRatio = (1 - ($compressedSize / $originalSize)) * 100;
         
@@ -692,68 +718,116 @@ class HuffmanCompressionService
             case 'zip':
                 return $this->saveAsZip($encodedData, $metadata, $filename, $path);
             
-            case 'bin':
-                return $this->saveAsBinary($encodedData, $metadata, $filename, $path);
+            case 'jpg':
+            case 'jpeg':
+                return $this->saveAsJpeg($encodedData, $metadata, $filename, $path);
             
-            case 'txt':
+            case 'bin':
             default:
-                return $this->saveAsText($encodedData, $metadata, $filename, $path);
+                // Binary format is most efficient (no base64 overhead)
+                return $this->saveAsBinary($encodedData, $metadata, $filename, $path);
         }
     }
     
     /**
-     * Save as TXT format (human-readable)
+     * Save as JPEG format (direct image output)
      */
-    private function saveAsText($encodedData, $metadata, $filename, $path)
+    private function saveAsJpeg($encodedData, $metadata, $filename, $path)
     {
-        $filename .= '.txt';
-        $fullPath = 'compressed/' . $filename; // Simpan langsung ke compressed/ di disk public
+        // For JPG format, we'll reload the original image and compress as JPEG
+        // This approach maintains original colors while still providing compression
         
-        $content = "KOMPRESIN COMPRESSED IMAGE FILE\n";
-        $content .= "================================\n";
-        $content .= "Version: 1.0\n";
-        $content .= "Algorithm: DEFLATE (LZ77 + Huffman)\n";
-        $content .= "Width: " . $metadata['width'] . "\n";
-        $content .= "Height: " . $metadata['height'] . "\n";
-        $content .= "Type: " . $metadata['type'] . "\n";
-        $content .= "Compressed At: " . date('Y-m-d H:i:s') . "\n";
-        $content .= "Original Size: " . strlen($encodedData) . " bytes\n";
-        $content .= "================================\n";
-        $content .= "DATA (Base64 Encoded):\n";
-        $content .= base64_encode($encodedData);
+        if (isset($metadata['original_image_path'])) {
+            // Load the original image to preserve colors
+            $originalImageData = $this->loadImage($metadata['original_image_path']);
+            
+            if ($originalImageData) {
+                // Create output filename
+                $filename .= '.jpg';
+                $fullPath = 'compressed/' . $filename;
+                $diskPath = Storage::disk('public')->path($fullPath);
+                
+                // Ensure directory exists
+                $dir = dirname($diskPath);
+                if (!is_dir($dir)) {
+                    mkdir($dir, 0755, true);
+                }
+                
+                // Save as JPEG with medium compression for good balance of size/quality
+                imagejpeg($originalImageData['resource'], $diskPath, 75);
+                imagedestroy($originalImageData['resource']);
+                
+                $fileSize = filesize($diskPath);
+                
+                return [
+                    'path' => 'public/' . $fullPath,
+                    'url' => '/storage/' . $fullPath,
+                    'filename' => $filename,
+                    'size' => $fileSize,
+                    'format' => 'jpg',
+                ];
+            }
+        }
         
-        Storage::disk('public')->put($fullPath, $content);
+        // Fallback: decompress grayscale data (if original image not available)
+        $decompressedData = gzuncompress($encodedData);
+        $image = imagecreatetruecolor($metadata['width'], $metadata['height']);
+        
+        $pixelIndex = 0;
+        for ($y = 0; $y < $metadata['height']; $y++) {
+            for ($x = 0; $x < $metadata['width']; $x++) {
+                if ($pixelIndex < strlen($decompressedData)) {
+                    $gray = ord($decompressedData[$pixelIndex]);
+                    $color = imagecolorallocate($image, $gray, $gray, $gray);
+                    imagesetpixel($image, $x, $y, $color);
+                    $pixelIndex++;
+                }
+            }
+        }
+        
+        // Save as JPEG
+        $filename .= '.jpg';
+        $fullPath = 'compressed/' . $filename;
+        $diskPath = Storage::disk('public')->path($fullPath);
+        
+        // Ensure directory exists
+        $dir = dirname($diskPath);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+        
+        // Save JPEG with 85% quality
+        imagejpeg($image, $diskPath, 85);
+        imagedestroy($image);
+        
+        $fileSize = filesize($diskPath);
         
         return [
             'path' => 'public/' . $fullPath,
             'url' => '/storage/' . $fullPath,
             'filename' => $filename,
-            'size' => strlen($content),
-            'format' => 'txt',
+            'size' => $fileSize,
+            'format' => 'jpg',
         ];
     }
     
     /**
-     * Save as JSON format
+     * Save as JSON format (optimized)
      */
     private function saveAsJson($encodedData, $metadata, $filename, $path)
     {
         $filename .= '.json';
         $fullPath = 'compressed/' . $filename;
         
+        // Minimal JSON structure
         $jsonData = [
-            'version' => '1.0',
-            'algorithm' => 'DEFLATE',
-            'metadata' => [
-                'width' => $metadata['width'],
-                'height' => $metadata['height'],
-                'type' => $metadata['type'],
-                'compressed_at' => date('Y-m-d H:i:s'),
-            ],
-            'data' => base64_encode($encodedData),
+            'w' => $metadata['width'],
+            'h' => $metadata['height'],
+            'd' => base64_encode($encodedData), // Still need base64 for JSON
         ];
         
-        $content = json_encode($jsonData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        // Compact JSON (no pretty print)
+        $content = json_encode($jsonData);
         Storage::disk('public')->put($fullPath, $content);
         
         return [
@@ -779,12 +853,11 @@ class HuffmanCompressionService
             throw new \Exception("Cannot create ZIP file");
         }
         
-        // Add compressed data
-        $zip->addFromString('compressed.dat', $encodedData);
+        // Add compressed data directly (no additional compression)
+        $zip->addFromString('data.bin', $encodedData);
         
-        // Add metadata
+        // Minimal metadata
         $metadataJson = json_encode([
-            'version' => '1.0',
             'algorithm' => 'DEFLATE',
             'width' => $metadata['width'],
             'height' => $metadata['height'],
@@ -812,21 +885,21 @@ class HuffmanCompressionService
     }
     
     /**
-     * Save as Binary format
+     * Save as Binary format (most efficient)
      */
     private function saveAsBinary($encodedData, $metadata, $filename, $path)
     {
         $filename .= '.bin';
         $fullPath = 'compressed/' . $filename;
         
-        $typeMap = ['jpg' => 1, 'jpeg' => 1, 'png' => 2, 'bmp' => 3];
-        $header = pack('vvCC', 
+        // Minimal 12-byte header: width(4) + height(4) + data_length(4)
+        $header = pack('VVV', 
             $metadata['width'],
             $metadata['height'],
-            $typeMap[$metadata['type']] ?? 2,
-            1 // Algorithm: 1 = DEFLATE
+            strlen($encodedData)
         );
         
+        // Raw compressed data (no base64 encoding)
         $binaryData = $header . $encodedData;
         Storage::disk('public')->put($fullPath, $binaryData);
         
@@ -840,7 +913,7 @@ class HuffmanCompressionService
     }
 
     /**
-     * Load compressed file (supports TXT, ZIP, JSON, and binary formats)
+     * Load compressed file (supports JPG, ZIP, JSON, and binary formats)
      */
     public function loadCompressedFile($path)
     {
@@ -852,9 +925,16 @@ class HuffmanCompressionService
         }
         $extension = pathinfo($path, PATHINFO_EXTENSION);
         
-        // Try TXT format (new format)
-        if ($extension === 'txt' || strpos($content, 'KOMPRESIN COMPRESSED IMAGE FILE') === 0) {
-            // Parse text format
+        // Handle JPG format (direct image, no decompression needed)
+        if ($extension === 'jpg' || $extension === 'jpeg') {
+            // For JPG files, we can't decompress back to original algorithm data
+            // This is a lossy format, mainly for viewing purposes
+            throw new \Exception('JPG format is output-only. Cannot be decompressed back to original data.');
+        }
+        
+        // Try old TXT format for backward compatibility
+        if ($extension === 'txt' && strpos($content, 'KOMPRESIN COMPRESSED IMAGE FILE') === 0) {
+            // Parse old text format
             $lines = explode("\n", $content);
             $metadata = [];
             $dataStarted = false;
@@ -923,25 +1003,62 @@ class HuffmanCompressionService
             }
         }
         
-        // Try JSON format
+        // Try JSON format (both old and new compact format)
         $jsonData = json_decode($content, true);
-        if ($jsonData && isset($jsonData['data']) && isset($jsonData['metadata'])) {
-            $encodedData = base64_decode($jsonData['data']);
-            $metadata = $jsonData['metadata'];
-            
-            return [
-                'metadata' => [
-                    'width' => $metadata['width'],
-                    'height' => $metadata['height'],
-                    'type' => $metadata['type'],
-                    'algorithm' => $jsonData['algorithm'] ?? 'DEFLATE',
-                    'huffman_tree' => null,
-                ],
-                'encoded_data' => $encodedData,
-            ];
+        if ($jsonData) {
+            // New compact format
+            if (isset($jsonData['w']) && isset($jsonData['h']) && isset($jsonData['d'])) {
+                $encodedData = base64_decode($jsonData['d']);
+                
+                return [
+                    'metadata' => [
+                        'width' => $jsonData['w'],
+                        'height' => $jsonData['h'],
+                        'type' => 'unknown',
+                        'algorithm' => 'DEFLATE',
+                        'huffman_tree' => null,
+                    ],
+                    'encoded_data' => $encodedData,
+                ];
+            }
+            // Old format with metadata
+            elseif (isset($jsonData['data']) && isset($jsonData['metadata'])) {
+                $encodedData = base64_decode($jsonData['data']);
+                $metadata = $jsonData['metadata'];
+                
+                return [
+                    'metadata' => [
+                        'width' => $metadata['width'],
+                        'height' => $metadata['height'],
+                        'type' => $metadata['type'],
+                        'algorithm' => $jsonData['algorithm'] ?? 'DEFLATE',
+                        'huffman_tree' => null,
+                    ],
+                    'encoded_data' => $encodedData,
+                ];
+            }
         }
         
-        // Fallback: Binary format (old .bin/.huf files)
+        // Try new binary format (12-byte header)
+        if (strlen($content) > 12) {
+            $header = unpack('Vwidth/Vheight/Vlength', substr($content, 0, 12));
+            if ($header && $header['length'] == strlen($content) - 12) {
+                $encodedData = substr($content, 12);
+                
+                return [
+                    'metadata' => [
+                        'width' => $header['width'],
+                        'height' => $header['height'],
+                        'type' => 'unknown',
+                        'algorithm' => 'DEFLATE',
+                        'huffman_tree' => null,
+                    ],
+                    'encoded_data' => $encodedData,
+                ];
+            }
+        }
+        
+        // Fallback: Old binary format (6-byte header)
         $binaryData = $content;
         if (strlen($binaryData) > 6) {
             $header = unpack('vwidth/vheight/Ctype/Calgorithm', substr($binaryData, 0, 6));

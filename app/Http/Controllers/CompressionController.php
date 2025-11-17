@@ -65,9 +65,16 @@ class CompressionController extends Controller
      */
     public function compress(Request $request)
     {
+        // Debug log
+        Log::info('Compression request received', [
+            'format' => $request->input('format'),
+            'has_image' => $request->hasFile('image'),
+            'image_size' => $request->hasFile('image') ? $request->file('image')->getSize() : 'no file'
+        ]);
+
         $request->validate([
             'image' => 'required|image|mimes:jpeg,jpg,png,bmp|max:20480', // max 20MB
-            'format' => 'nullable|string|in:txt,json,zip,bin', // format pilihan user
+            'format' => 'nullable|string|in:json,zip,bin,jpg', // format pilihan user (txt removed, jpg added)
         ]);
 
         try {
@@ -128,7 +135,7 @@ class CompressionController extends Controller
             }
 
             // Save compressed file
-            $format = $request->input('format', 'txt'); // Default to txt
+            $format = $request->input('format', 'bin'); // Default to bin (most efficient)
             $compressedFile = $this->huffmanService->saveCompressedFile(
                 $compressionResult['encoded_data'],
                 [
@@ -138,6 +145,7 @@ class CompressionController extends Controller
                     'height' => $compressionResult['height'],
                     'type' => $compressionResult['type'],
                     'algorithm' => $compressionResult['algorithm'] ?? 'DEFLATE',
+                    'original_image_path' => $fullPath, // Add original image path for JPG format
                 ],
                 $format // Pass format parameter
             );
