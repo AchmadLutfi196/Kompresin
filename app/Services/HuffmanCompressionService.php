@@ -11,7 +11,7 @@ class HuffmanCompressionService
     private $frequencyTable = [];
 
     /**
-     * Convert RGB pixel data to grayscale for better compression
+     * Convert RGB pixel data to grayscale 
      */
     private function convertToGrayscale($pixelData, $width, $height)
     {
@@ -35,7 +35,7 @@ class HuffmanCompressionService
     }
 
     /**
-     * Compress an image using DEFLATE (LZ77 + Huffman) - industry standard
+     * Compress an image using DEFLATE (LZ77 + Huffman) 
      */
     public function compress($imagePath)
     {
