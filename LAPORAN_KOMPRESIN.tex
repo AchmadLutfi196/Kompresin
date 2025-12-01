@@ -22,6 +22,7 @@
 \usepackage{setspace}
 \usepackage{caption}
 \usepackage{subcaption}
+\usepackage{newtxtext,newtxmath}
 
 % Page geometry
 \geometry{
@@ -60,12 +61,7 @@
 }
 \lstset{style=mystyle}
 
-% Header and footer
-\pagestyle{fancy}
-\fancyhf{}
-\rhead{Kompresin - Aplikasi Kompresi Gambar}
-\lhead{\leftmark}
-\cfoot{\thepage}
+
 
 % Flowchart styles
 \tikzstyle{startstop} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=red!30]
@@ -734,7 +730,7 @@ const handleCompress = async (e: FormEvent) => {
 
 \subsection{Dataset Pengujian}
 
-Dataset yang digunakan dalam pengujian terdiri dari 34 gambar yang dibagi menjadi 4 kategori:
+Dataset yang digunakan dalam pengujian terdiri dari 28 gambar yang dibagi menjadi 4 kategori:
 
 \begin{table}[H]
 \centering
@@ -744,15 +740,15 @@ Dataset yang digunakan dalam pengujian terdiri dari 34 gambar yang dibagi menjad
 \hline
 \textbf{Kategori} & \textbf{Jumlah} & \textbf{Format} & \textbf{Karakteristik} \\
 \hline
-Logo & 4 & PNG & Grafis dengan transparansi \\
+Logo & 6 & PNG/JPG & Grafis logo organisasi \\
 \hline
-Manusia & 10 & JPEG & Foto portrait dan grup \\
+Manusia & 5 & JPG & Foto portrait resolusi tinggi (6000×4000) \\
 \hline
-Pemandangan Alam & 10 & JPEG & Foto landscape \\
+Pemandangan Alam & 7 & JPG & Foto landscape resolusi tinggi (6000×4000) \\
 \hline
-Warna Solid & 10 & JPEG & Gambar satu warna \\
+Warna Solid & 10 & JPEG & Gambar satu warna (275×183) \\
 \hline
-\textbf{Total} & \textbf{34} & - & - \\
+\textbf{Total} & \textbf{28} & - & - \\
 \hline
 \end{tabular}
 \end{table}
@@ -769,15 +765,15 @@ Warna Solid & 10 & JPEG & Gambar satu warna \\
 \hline
 \textbf{Kategori} & \textbf{Original} & \textbf{Compressed} & \textbf{Rasio} & \textbf{Status} \\
 \hline
-Logo (PNG) & 27.85 KB & 7.87 KB & 71.76\% & Excellent \\
+Logo (PNG/JPG) & 7.49 MB & 659.56 KB & 91.40\% & Excellent \\
 \hline
-Manusia & 219.46 KB & 42.40 KB & 80.68\% & Excellent \\
+Manusia & 38.03 MB & 1.85 MB & 95.13\% & Excellent \\
 \hline
-Pemandangan Alam & 119.21 KB & 18.12 KB & 84.80\% & Excellent \\
+Pemandangan Alam & 50.57 MB & 2.72 MB & 94.63\% & Excellent \\
 \hline
 Warna Solid & 15.38 KB & 14.99 KB & 2.53\% & Minimal \\
 \hline
-\textbf{TOTAL} & \textbf{381.91 KB} & \textbf{83.38 KB} & \textbf{78.17\%} & - \\
+\textbf{TOTAL} & \textbf{96.11 MB} & \textbf{5.23 MB} & \textbf{94.56\%} & - \\
 \hline
 \end{tabular}
 \end{table}
@@ -792,17 +788,17 @@ Warna Solid & 15.38 KB & 14.99 KB & 2.53\% & Minimal \\
 \hline
 \textbf{Metrik} & \textbf{Nilai} \\
 \hline
-Total file diuji & 34 \\
+Total file diuji & 28 \\
 \hline
-File berhasil dikompres & 29 (85\%) \\
+File berhasil dikompres & 23 (82.14\%) \\
 \hline
-File menjadi lebih besar & 5 (15\%) \\
+File menjadi lebih besar & 5 (17.86\%) \\
 \hline
-Rasio kompresi rata-rata & 78.17\% \\
+Rasio kompresi rata-rata & 94.56\% \\
 \hline
-Total penghematan & 298.53 KB \\
+Total penghematan & 90.88 MB \\
 \hline
-Waktu kompresi rata-rata & 18 ms/file \\
+Waktu kompresi rata-rata & 120 ms/file \\
 \hline
 \end{tabular}
 \end{table}
@@ -817,25 +813,15 @@ Waktu kompresi rata-rata & 18 ms/file \\
 \hline
 \textbf{Filename} & \textbf{Original} & \textbf{Compressed} & \textbf{Rasio} & \textbf{Dimensi} \\
 \hline
-manusia\_1.jpeg & 8.14 KB & 1.70 KB & 79.11\% & 183×275 \\
+IMG\_5811.JPG & 5.06 MB & 376.76 KB & 92.73\% & 6000×4000 \\
 \hline
-manusia\_2.jpeg & 4.08 KB & 1.63 KB & 60.07\% & 243×207 \\
+IMG\_5914.JPG & 8.66 MB & 378.72 KB & 95.73\% & 6000×4000 \\
 \hline
-manusia\_3.jpeg & 4.80 KB & 1.68 KB & 65.08\% & 275×183 \\
+IMG\_5939.JPG & 7.18 MB & 377.37 KB & 94.87\% & 6000×4000 \\
 \hline
-manusia\_4.jpg & 16.83 KB & 4.97 KB & 70.47\% & 612×408 \\
+IMG\_6026.JPG & 8.96 MB & 375.20 KB & 95.91\% & 6000×4000 \\
 \hline
-manusia\_5.jpg & 19.26 KB & 5.08 KB & 73.63\% & 612×408 \\
-\hline
-manusia\_6.jpg & 31.26 KB & 5.52 KB & 82.35\% & 612×408 \\
-\hline
-manusia\_7.jpg & 36.21 KB & 5.07 KB & 85.99\% & 612×376 \\
-\hline
-manusia\_8.jpg & 29.60 KB & 5.59 KB & 81.12\% & 612×408 \\
-\hline
-manusia\_9.jpg & 42.57 KB & 5.93 KB & 86.07\% & 612×408 \\
-\hline
-manusia\_10.jpg & 26.71 KB & 5.24 KB & 80.38\% & 612×408 \\
+IMG\_6033.JPG & 8.17 MB & 389.46 KB & 95.34\% & 6000×4000 \\
 \hline
 \end{tabular}
 \end{table}
@@ -850,25 +836,77 @@ manusia\_10.jpg & 26.71 KB & 5.24 KB & 80.38\% & 612×408 \\
 \hline
 \textbf{Filename} & \textbf{Original} & \textbf{Compressed} & \textbf{Rasio} & \textbf{Dimensi} \\
 \hline
-alam\_1.jpeg & 8.61 KB & 1.67 KB & 80.56\% & 274×184 \\
+IMG\_6146.JPG & 7.75 MB & 380.48 KB & 95.21\% & 6000×4000 \\
 \hline
-alam\_2.jpeg & 11.78 KB & 1.83 KB & 84.46\% & 318×159 \\
+IMG\_6212.JPG & 6.77 MB & 386.40 KB & 94.43\% & 6000×4000 \\
 \hline
-alam\_3.jpeg & 9.12 KB & 1.69 KB & 81.46\% & 298×169 \\
+IMG\_6213.JPG & 6.25 MB & 391.69 KB & 93.88\% & 6000×4000 \\
 \hline
-alam\_4.jpeg & 9.62 KB & 1.74 KB & 81.96\% & 259×194 \\
+IMG\_6221.JPG & 6.43 MB & 387.69 KB & 94.11\% & 6000×4000 \\
 \hline
-alam\_5.jpeg & 17.81 KB & 1.93 KB & 89.14\% & 300×168 \\
+IMG\_6225.JPG & 5.71 MB & 384.80 KB & 93.42\% & 6000×4000 \\
 \hline
-alam\_6.jpeg & 11.03 KB & 1.85 KB & 83.25\% & 275×183 \\
+IMG\_6231.JPG & 5.51 MB & 382.21 KB & 93.22\% & 6000×4000 \\
 \hline
-alam\_7.jpeg & 15.51 KB & 1.84 KB & 88.15\% & 276×183 \\
+IMG\_6244.JPG & 12.15 MB & 468.02 KB & 96.24\% & 6000×4000 \\
 \hline
-alam\_8.jpeg & 12.78 KB & 2.02 KB & 84.20\% & 284×177 \\
+\end{tabular}
+\end{table}
+
+\subsubsection{Detail Hasil - Kategori Logo}
+
+\begin{table}[H]
+\centering
+\caption{Detail Hasil Kompresi - Logo}
+\label{tab:detail-logo}
+\begin{tabular}{|l|r|r|r|r|}
 \hline
-alam\_9.jpeg & 13.95 KB & 1.83 KB & 86.91\% & 300×168 \\
+\textbf{Filename} & \textbf{Original} & \textbf{Compressed} & \textbf{Rasio} & \textbf{Dimensi} \\
 \hline
-alam\_10.jpeg & 9.00 KB & 1.72 KB & 80.84\% & 275×183 \\
+Logo UTM & 1.57 MB & 71.30 KB & 95.56\% & 2048×2048 \\
+\hline
+HIMAMEKA\_2.png & 644.38 KB & 13.92 KB & 97.84\% & 762×768 \\
+\hline
+ITC LOGO.png & 447.38 KB & 12.99 KB & 97.10\% & 640×640 \\
+\hline
+Logo HMM.png & 440.16 KB & 20.95 KB & 95.24\% & 1000×1000 \\
+\hline
+Logo UTM.jpg & 2.77 MB & 288.31 KB & 89.85\% & 4000×4000 \\
+\hline
+Logo HIMASI.png & 1.65 MB & 252.09 KB & 85.06\% & 3937×3532 \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Detail Hasil - Kategori Warna Solid}
+
+\begin{table}[H]
+\centering
+\caption{Detail Hasil Kompresi - Warna Solid}
+\label{tab:detail-warna}
+\begin{tabular}{|l|r|r|r|r|}
+\hline
+\textbf{Filename} & \textbf{Original} & \textbf{Compressed} & \textbf{Rasio} & \textbf{Status} \\
+\hline
+abu\_abu.jpeg & 683 B & 1.52 KB & -128.40\% & Lebih Besar \\
+\hline
+biru.jpeg & 1.75 KB & 1.46 KB & 16.41\% & Berkurang \\
+\hline
+coklat.jpeg & 1.46 KB & 1.53 KB & -5.30\% & Lebih Besar \\
+\hline
+hijau.jpeg & 1.25 KB & 1.52 KB & -21.80\% & Lebih Besar \\
+\hline
+hitam.jpeg & 1.89 KB & 1.51 KB & 20.10\% & Berkurang \\
+\hline
+kuning.jpeg & 1.40 KB & 1.46 KB & -3.69\% & Lebih Besar \\
+\hline
+merah.jpeg & 1.69 KB & 1.53 KB & 9.66\% & Berkurang \\
+\hline
+orange.jpeg & 2.12 KB & 1.47 KB & 30.94\% & Berkurang \\
+\hline
+putih.jpeg & 1.14 KB & 1.49 KB & -30.48\% & Lebih Besar \\
+\hline
+ungu.jpeg & 2.01 KB & 1.50 KB & 25.22\% & Berkurang \\
 \hline
 \end{tabular}
 \end{table}
@@ -880,9 +918,9 @@ alam\_10.jpeg & 9.00 KB & 1.72 KB & 80.84\% & 275×183 \\
 Berdasarkan hasil pengujian, dapat disimpulkan bahwa:
 
 \begin{enumerate}
-    \item \textbf{Foto Natural (Manusia \& Pemandangan):} Metode JPEG Quality Reduction sangat efektif dengan rasio kompresi 80-85\%
-    \item \textbf{Grafis PNG:} Konversi dari PNG ke JPEG memberikan penghematan signifikan (71\%)
-    \item \textbf{Gambar Solid Color:} Kompresi kurang efektif karena file sudah sangat kecil dan JPEG memiliki overhead minimum
+    \item \textbf{Foto Natural (Manusia \& Pemandangan):} Metode JPEG Quality Reduction sangat efektif dengan rasio kompresi 93-96\% untuk gambar resolusi tinggi (6000×4000 pixel)
+    \item \textbf{Grafis Logo (PNG/JPG):} Konversi dan kompresi logo memberikan penghematan signifikan hingga 91.40\%
+    \item \textbf{Gambar Solid Color:} Kompresi kurang efektif (2.53\%) karena file sudah sangat kecil dan JPEG memiliki overhead minimum
 \end{enumerate}
 
 \subsubsection{Faktor yang Mempengaruhi Kompresi}
@@ -905,18 +943,20 @@ Berdasarkan penelitian dan pengembangan aplikasi Kompresin, dapat disimpulkan ba
 \begin{enumerate}
     \item Aplikasi Kompresin berhasil diimplementasikan menggunakan metode JPEG Quality Reduction dengan teknologi Laravel dan React
     
-    \item Hasil pengujian menunjukkan rata-rata rasio kompresi sebesar \textbf{78.17\%} dengan tingkat keberhasilan \textbf{85\%} (29 dari 34 file)
+    \item Hasil pengujian menunjukkan rata-rata rasio kompresi sebesar \textbf{94.56\%} dengan tingkat keberhasilan \textbf{82.14\%} (23 dari 28 file)
     
     \item Metode JPEG Quality Reduction sangat efektif untuk:
     \begin{itemize}
-        \item Foto manusia (rasio 80.68\%)
-        \item Foto pemandangan alam (rasio 84.80\%)
-        \item Konversi PNG ke JPEG (rasio 71.76\%)
+        \item Foto manusia resolusi tinggi (rasio 95.13\%)
+        \item Foto pemandangan alam (rasio 94.63\%)
+        \item Grafis logo PNG/JPG (rasio 91.40\%)
     \end{itemize}
     
-    \item Metode ini kurang efektif untuk gambar dengan warna solid yang ukurannya sudah sangat kecil
+    \item Total penghematan yang dicapai adalah \textbf{90.88 MB} dari total 96.11 MB data uji
     
-    \item Performa aplikasi cukup baik dengan rata-rata waktu kompresi 18ms per file
+    \item Metode ini kurang efektif untuk gambar dengan warna solid yang ukurannya sudah sangat kecil (2.53\%)
+    
+    \item Performa aplikasi cukup baik dengan rata-rata waktu kompresi 120ms per file untuk gambar resolusi tinggi (6000×4000)
 \end{enumerate}
 
 \subsection{Saran}
@@ -982,79 +1022,6 @@ Academic Press.
 
 \end{thebibliography}
 
-% ============================================
-% LAMPIRAN
-% ============================================
-\newpage
-\appendix
-\section{Lampiran}
 
-\subsection{Konfigurasi Environment}
-
-\begin{lstlisting}[caption=File .env Configuration]
-APP_NAME=Kompresin
-APP_ENV=local
-APP_DEBUG=true
-APP_URL=http://localhost
-
-DB_CONNECTION=sqlite
-DB_DATABASE=/path/to/database.sqlite
-
-FILESYSTEM_DISK=local
-\end{lstlisting}
-
-\subsection{Database Migration}
-
-\begin{lstlisting}[language=PHP, caption=Migration File]
-Schema::create('compression_histories', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('user_id')->nullable();
-    $table->string('type'); // compress or decompress
-    $table->string('filename');
-    $table->string('original_path')->nullable();
-    $table->string('compressed_path')->nullable();
-    $table->string('decompressed_path')->nullable();
-    $table->bigInteger('original_size');
-    $table->bigInteger('compressed_size');
-    $table->decimal('compression_ratio', 10, 2);
-    $table->decimal('bits_per_pixel', 10, 4)->nullable();
-    $table->decimal('entropy', 10, 4)->nullable();
-    $table->integer('image_width')->nullable();
-    $table->integer('image_height')->nullable();
-    $table->timestamps();
-});
-\end{lstlisting}
-
-\subsection{Route Configuration}
-
-\begin{lstlisting}[language=PHP, caption=routes/web.php]
-// Compression routes
-Route::get('/compress', [CompressionController::class, 'index'])
-    ->name('compress');
-Route::post('/compress', [CompressionController::class, 'compress'])
-    ->name('compress.process');
-
-// Decompression routes
-Route::get('/decompress', [CompressionController::class, 'decompressPage'])
-    ->name('decompress');
-Route::post('/decompress', [CompressionController::class, 'decompress'])
-    ->name('decompress.process');
-
-// Public download routes
-Route::get('/download/compressed/{id}', 
-    [CompressionController::class, 'downloadCompressedFile'])
-    ->name('download.compressed');
-Route::get('/download/decompressed/{id}', 
-    [CompressionController::class, 'downloadDecompressedFile'])
-    ->name('download.decompressed');
-
-// Preview routes
-Route::get('/preview/original/{id}', 
-    [CompressionController::class, 'previewOriginalFile'])
-    ->name('preview.original');
-Route::get('/preview/compressed/{id}', 
-    [CompressionController::class, 'previewCompressedFile'])
-    ->name('preview.compressed');
-\end{lstlisting}
 
 \end{document}

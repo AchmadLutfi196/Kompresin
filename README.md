@@ -46,7 +46,7 @@ Kompresin adalah aplikasi web untuk mengompres gambar menggunakan metode JPEG Qu
 
 | Kategori | Teknologi |
 |----------|-----------|
-| Backend | Laravel 11, PHP 8.2+ |
+| Backend | Laravel 12, PHP 8.2+ |
 | Frontend | React 18, TypeScript |
 | Styling | Tailwind CSS |
 | State Management | Inertia.js |
