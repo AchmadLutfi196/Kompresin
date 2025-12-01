@@ -8,6 +8,7 @@ import { SweetAlert } from '@/utils/sweetAlert';
 
 interface DecompressionResult {
     decompressed_image_url: string;
+    decompressed_download_url: string;
     decompressed_filename: string;
     width: number;
     height: number;
@@ -281,7 +282,7 @@ export default function Index() {
                                 transition={{ delay: 0.5 }}
                             >
                                 <a
-                                    href={result.decompressed_image_url}
+                                    href={result.decompressed_download_url}
                                     download={result.decompressed_filename}
                                     className="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
                                 >

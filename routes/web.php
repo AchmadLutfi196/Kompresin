@@ -22,8 +22,14 @@ Route::post('/decompress', [CompressionController::class, 'decompress'])->name('
 Route::get('/history', [CompressionController::class, 'history'])->name('history');
 Route::delete('/history/{id}', [CompressionController::class, 'deleteHistory'])->name('history.delete');
 
-// Public download route for compressed files (no auth required)
+// Public download routes (no auth required)
 Route::get('/download/compressed/{id}', [CompressionController::class, 'downloadCompressedFile'])->name('download.compressed');
+Route::get('/download/decompressed/{id}', [CompressionController::class, 'downloadDecompressedFile'])->name('download.decompressed');
+
+// Public preview routes (inline display, no auth required)
+Route::get('/preview/original/{id}', [CompressionController::class, 'previewOriginalFile'])->name('preview.original');
+Route::get('/preview/compressed/{id}', [CompressionController::class, 'previewCompressedFile'])->name('preview.compressed');
+Route::get('/preview/decompressed/{id}', [CompressionController::class, 'previewDecompressedFile'])->name('preview.decompressed');
 
 // Secure file serving routes (requires auth)
 Route::middleware(['auth'])->group(function () {

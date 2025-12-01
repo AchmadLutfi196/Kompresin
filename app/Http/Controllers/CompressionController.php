@@ -193,7 +193,7 @@ class CompressionController extends Controller
                     'compressed_filename' => $compressedFile['filename'],
                     'algorithm' => $compressionResult['algorithm'],
                     'compression_time' => round($compressionResult['compression_time'], 3),
-                    'original_image_url' => route('secure.original', $history->id),
+                    'original_image_url' => route('preview.original', $history->id),
                     'description' => $compressionResult['description'],
                     'history_id' => $history->id,
                 ],
@@ -281,7 +281,8 @@ class CompressionController extends Controller
                 'success' => true,
                 'message' => 'Image decompressed successfully',
                 'data' => [
-                    'decompressed_image_url' => route('secure.decompressed', $history->id),
+                    'decompressed_image_url' => route('preview.decompressed', $history->id),
+                    'decompressed_download_url' => route('download.decompressed', $history->id),
                     'decompressed_filename' => $decompressedImage['filename'],
                     'decompression_time' => round($decompressedImage['decompression_time'] ?? 0, 3),
                     'width' => $metadata['width'],
@@ -445,6 +446,117 @@ class CompressionController extends Controller
             'Cache-Control' => 'no-cache, no-store, must-revalidate',
             'Pragma' => 'no-cache',
             'Expires' => '0',
+        ]);
+    }
+
+    /**
+     * Download decompressed file - public route (no auth required)
+     * Uses history ID for security but allows unauthenticated download
+     */
+    public function downloadDecompressedFile($id)
+    {
+        $history = CompressionHistory::findOrFail($id);
+        
+        // Get full path
+        $fullPath = $this->getFullPathOnCorrectDisk($history->decompressed_path);
+        
+        if (!file_exists($fullPath)) {
+            abort(404, 'File not found');
+        }
+        
+        $fileSize = filesize($fullPath);
+        $filename = pathinfo($history->decompressed_path, PATHINFO_BASENAME);
+        $mimeType = mime_content_type($fullPath);
+        
+        // Return file with proper headers for download
+        return response()->file($fullPath, [
+            'Content-Type' => $mimeType,
+            'Content-Length' => $fileSize,
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+        ]);
+    }
+
+    /**
+     * Preview compressed file - public route (no auth required)
+     * Displays file inline in browser instead of forcing download
+     */
+    public function previewCompressedFile($id)
+    {
+        $history = CompressionHistory::findOrFail($id);
+        
+        // Get full path
+        $fullPath = $this->getFullPathOnCorrectDisk($history->compressed_path);
+        
+        if (!file_exists($fullPath)) {
+            abort(404, 'File not found');
+        }
+        
+        $fileSize = filesize($fullPath);
+        $mimeType = mime_content_type($fullPath);
+        
+        // Return file with inline disposition for preview
+        return response()->file($fullPath, [
+            'Content-Type' => $mimeType,
+            'Content-Length' => $fileSize,
+            'Content-Disposition' => 'inline',
+            'Cache-Control' => 'public, max-age=3600',
+        ]);
+    }
+
+    /**
+     * Preview original file - public route (no auth required)
+     * Displays file inline in browser instead of forcing download
+     */
+    public function previewOriginalFile($id)
+    {
+        $history = CompressionHistory::findOrFail($id);
+        
+        // Get full path
+        $fullPath = $this->getFullPathOnCorrectDisk($history->original_path);
+        
+        if (!file_exists($fullPath)) {
+            abort(404, 'File not found');
+        }
+        
+        $fileSize = filesize($fullPath);
+        $mimeType = mime_content_type($fullPath);
+        
+        // Return file with inline disposition for preview
+        return response()->file($fullPath, [
+            'Content-Type' => $mimeType,
+            'Content-Length' => $fileSize,
+            'Content-Disposition' => 'inline',
+            'Cache-Control' => 'public, max-age=3600',
+        ]);
+    }
+
+    /**
+     * Preview decompressed file - public route (no auth required)
+     * Displays file inline in browser instead of forcing download
+     */
+    public function previewDecompressedFile($id)
+    {
+        $history = CompressionHistory::findOrFail($id);
+        
+        // Get full path
+        $fullPath = $this->getFullPathOnCorrectDisk($history->decompressed_path);
+        
+        if (!file_exists($fullPath)) {
+            abort(404, 'File not found');
+        }
+        
+        $fileSize = filesize($fullPath);
+        $mimeType = mime_content_type($fullPath);
+        
+        // Return file with inline disposition for preview
+        return response()->file($fullPath, [
+            'Content-Type' => $mimeType,
+            'Content-Length' => $fileSize,
+            'Content-Disposition' => 'inline',
+            'Cache-Control' => 'public, max-age=3600',
         ]);
     }
 
