@@ -1,212 +1,154 @@
-# Kompresi Citra - Huffman Coding
+# Kompresin - Aplikasi Kompresi Gambar
 
-Website kompresi citra berbasis web menggunakan Laravel dan Tailwind CSS dengan penerapan algoritma Huffman Code.
+Website kompresi citra berbasis web menggunakan Laravel dan React dengan metode **JPEG Quality Reduction**.
 
-## ⚠️ Catatan Penting: Tujuan Pembelajaran
+## 🚀 Tentang Aplikasi
 
-**Aplikasi ini dibuat untuk pembelajaran algoritma Huffman Coding, bukan untuk kompresi praktis.**
+Kompresin adalah aplikasi web untuk mengompres gambar menggunakan metode JPEG Quality Reduction yang memanfaatkan transformasi DCT (Discrete Cosine Transform) untuk mengurangi ukuran file gambar secara efisien.
 
-### Limitasi Huffman untuk Gambar:
-- ❌ **File JPG/PNG akan jadi LEBIH BESAR** (10-200% lebih besar)
-- ❌ Tidak cocok untuk foto natural atau gambar kompleks
-- ✅ **Cocok untuk**: BMP, gambar sederhana, logo, diagram
-- 📚 **Tujuan**: Memahami cara kerja algoritma Huffman
-
-### Mengapa File Jadi Lebih Besar?
-
-1. **JPG sudah optimal**: Menggunakan DCT + Quantization + Huffman (10-20x lebih efisien)
-2. **Proses kita**: JPG → Decode → Grayscale (RAW) → Huffman → .bin
-3. **Overhead**: Metadata + Huffman table + kehilangan kompresi original
-4. **Entropy tinggi**: Gambar natural memiliki entropy 7-8 bits/pixel (mendekati random)
-
-**Gunakan aplikasi ini untuk memahami algoritma, bukan untuk mengecilkan file praktis!**
+### ✨ Keunggulan
+- ✅ **Kompresi Efektif**: Rata-rata rasio kompresi 78% untuk foto
+- ✅ **Kualitas Terjaga**: Menggunakan quality level optimal
+- ✅ **Cepat**: Rata-rata waktu kompresi 18ms per file
+- ✅ **Multi Format**: Support JPG, PNG, BMP, GIF
 
 ---
 
-## 🚀 Fitur Utama
+## 📋 Fitur Utama
 
-### 1. Upload Gambar
-- Format yang didukung: JPG, PNG, BMP
-- Validasi ukuran file (maksimal 10MB)
-- Preview gambar sebelum proses kompresi
+### 1. Kompresi Gambar
+- Upload gambar (JPG, PNG, BMP, GIF)
+- Maksimal ukuran file 10MB
+- Preview gambar sebelum kompresi
+- Pilihan format output: JPG atau BIN
+- Tampilan statistik kompresi (rasio, ukuran, BPP)
 
-### 2. Kompresi Gambar
-- Implementasi algoritma Huffman Code untuk mengompresi data piksel
-- Tampilan perbandingan ukuran sebelum dan sesudah kompresi
-- Tampilan tingkat rasio kompresi dalam persentase
-- Menyimpan hasil kompres dalam format biner (.bin)
-- Visualisasi pohon Huffman berdasarkan frekuensi simbol
-- Tabel kode Huffman (simbol, frekuensi, kode biner)
-
-### 3. Dekompresi Gambar
+### 2. Dekompresi Gambar
 - Upload file hasil kompresi (.bin)
-- Gunakan tabel Huffman untuk mengembalikan ke gambar asli
-- Tampilan hasil dekompresi
-- Perbandingan kualitas dengan citra awal
+- Ekstrak dan tampilkan gambar
+- Download hasil dekompresi
 
-### 4. Visualisasi Proses Huffman
-- Pohon Huffman visual dengan canvas HTML5
-- Tabel lengkap simbol, frekuensi, dan kode biner
-- Penjelasan cara membaca visualisasi
+### 3. Riwayat Proses
+- Simpan riwayat kompresi dan dekompresi
+- Data: nama file, ukuran awal/akhir, rasio kompresi
+- Fitur hapus riwayat
+- Pagination
 
-### 5. Riwayat Proses
-- Simpan riwayat kompresi dan dekompresi di database
-- Data yang tersimpan: id, nama file, ukuran awal, ukuran akhir, rasio kompresi
-- Fitur hapus riwayat per baris
-- Pagination untuk riwayat banyak
-
-### 6. Analisis Efisiensi
-- Compression Ratio (%)
-- Bits Per Pixel (BPP)
-- Entropy
-- Perbandingan dengan metode standar
-
-### 7. Antarmuka Pengguna (UI)
-- Halaman utama: penjelasan konsep kompresi-dekompresi
-- Halaman kompresi: form upload, visualisasi, statistik
-- Halaman dekompresi: upload .bin, hasil rekonstruksi
-- Halaman riwayat: tabel riwayat dengan fitur hapus
+### 4. Antarmuka Modern
 - Desain responsif dengan Tailwind CSS
-- Mendukung mode gelap (dark mode)
+- Dark mode support
 - Animasi smooth dengan Framer Motion
+- Loading states dan notifikasi
 
-## 📋 Teknologi yang Digunakan
+---
 
-- **Backend**: Laravel 11
-- **Frontend**: React 18 + TypeScript
-- **Styling**: Tailwind CSS
-- **State Management**: Inertia.js
-- **Animasi**: Framer Motion
-- **Database**: MySQL/SQLite
+## 🛠️ Teknologi
 
-## 🛠️ Instalasi
+| Kategori | Teknologi |
+|----------|-----------|
+| Backend | Laravel 11, PHP 8.2+ |
+| Frontend | React 18, TypeScript |
+| Styling | Tailwind CSS |
+| State Management | Inertia.js |
+| Animasi | Framer Motion |
+| Database | SQLite/MySQL |
+| Image Processing | GD Library |
+
+---
+
+## 📦 Instalasi
 
 ### Prasyarat
-- PHP 8.2 atau lebih tinggi
+- PHP 8.2+
 - Composer
 - Node.js & NPM
-- MySQL/SQLite
+- SQLite/MySQL
 
 ### Langkah Instalasi
 
-1. Clone repository
 ```bash
-git clone <repository-url>
+# 1. Clone repository
+git clone https://github.com/AchmadLutfi196/Kompresin.git
 cd Kompresin
-```
 
-2. Install dependencies PHP
-```bash
+# 2. Install dependencies
 composer install
-```
-
-3. Install dependencies JavaScript
-```bash
 npm install
-```
 
-4. Salin file environment
-```bash
+# 3. Setup environment
 cp .env.example .env
-```
-
-5. Generate application key
-```bash
 php artisan key:generate
-```
 
-6. Konfigurasi database di file `.env`
-```
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=kompresin
-DB_USERNAME=root
-DB_PASSWORD=
-```
+# 4. Konfigurasi database di .env
+# DB_CONNECTION=sqlite
 
-7. Jalankan migrasi database
-```bash
+# 5. Migrasi database
 php artisan migrate
-```
 
-8. Buat symbolic link untuk storage
-```bash
+# 6. Buat symbolic link storage
 php artisan storage:link
-```
 
-9. Compile assets
-```bash
+# 7. Build assets
 npm run build
-```
 
-atau untuk development:
-```bash
-npm run dev
-```
-
-10. Jalankan server
-```bash
+# 8. Jalankan server
 php artisan serve
 ```
 
-Aplikasi akan berjalan di `http://localhost:8000`
+Aplikasi berjalan di `http://localhost:8000`
 
-## 📖 Cara Menggunakan
+---
+
+## 📖 Cara Penggunaan
 
 ### Kompresi Gambar
-
-1. Buka halaman "Kompresi Gambar"
-2. Klik area upload atau drag & drop gambar
-3. Preview gambar akan muncul
-4. Klik tombol "Kompres Gambar"
-5. Tunggu proses kompresi selesai
-6. Lihat hasil statistik, visualisasi pohon Huffman, dan tabel kode
-7. Download file .bin hasil kompresi
+1. Buka halaman **Kompresi**
+2. Upload gambar (drag & drop atau klik)
+3. Pilih format output (JPG/BIN)
+4. Klik **Kompres Gambar**
+5. Lihat statistik dan download hasil
 
 ### Dekompresi Gambar
-
-1. Buka halaman "Dekompresi Gambar"
+1. Buka halaman **Dekompresi**
 2. Upload file .bin hasil kompresi
-3. Klik tombol "Dekompresi Gambar"
-4. Tunggu proses dekompresi selesai
-5. Lihat hasil gambar yang telah dikembalikan
-6. Download gambar hasil dekompresi
+3. Klik **Dekompresi**
+4. Preview dan download gambar
 
-### Melihat Riwayat
+---
 
-1. Buka halaman "Riwayat"
-2. Lihat daftar semua proses kompresi dan dekompresi
-3. Klik tombol hapus untuk menghapus riwayat tertentu
+## 🔬 Metode Kompresi
 
-## 🔬 Algoritma Huffman Code
+### JPEG Quality Reduction
 
-### Konsep Dasar
+Aplikasi menggunakan kompresi JPEG dengan tahapan:
 
-Algoritma Huffman adalah metode kompresi lossless yang menggunakan kode dengan panjang variabel. Prinsip kerjanya:
+1. **Color Space Conversion**: RGB → YCbCr
+2. **Downsampling**: Pengurangan resolusi chrominance
+3. **Block Splitting**: Pembagian gambar menjadi blok 8×8 pixel
+4. **DCT Transform**: Transformasi ke domain frekuensi
+5. **Quantization**: Pembulatan koefisien DCT
+6. **Entropy Coding**: Encoding dengan Huffman coding
 
-1. **Analisis Frekuensi**: Menghitung frekuensi kemunculan setiap simbol (nilai piksel)
-2. **Pembuatan Pohon**: Membangun pohon biner berdasarkan frekuensi
-3. **Pengkodean**: Simbol dengan frekuensi tinggi mendapat kode pendek
-4. **Kompresi**: Data asli diubah menjadi kode Huffman
-5. **Dekompresi**: Menggunakan pohon Huffman untuk decode
+### Metrik Evaluasi
 
-### Metrik Efisiensi
+- **Compression Ratio**: `(1 - compressed/original) × 100%`
+- **Bits Per Pixel (BPP)**: `(compressed_size × 8) / (width × height)`
 
-- **Compression Ratio**: Persentase pengurangan ukuran file
-  ```
-  Ratio = (1 - (compressed_size / original_size)) × 100%
-  ```
+---
 
-- **Bits Per Pixel (BPP)**: Rata-rata jumlah bit untuk menyimpan satu piksel
-  ```
-  BPP = total_bits / total_pixels
-  ```
+## 📊 Hasil Pengujian
 
-- **Entropy**: Ukuran rata-rata informasi minimum
-  ```
-  H = -Σ(p(x) × log₂(p(x)))
-  ```
+Pengujian dengan 34 gambar dalam 4 kategori:
+
+| Kategori | Rasio Kompresi |
+|----------|----------------|
+| Logo (PNG) | 71.76% |
+| Foto Manusia | 80.68% |
+| Pemandangan Alam | 84.80% |
+| Warna Solid | 2.53% |
+| **Rata-rata** | **78.17%** |
+
+---
 
 ## 📁 Struktur Project
 
@@ -218,98 +160,46 @@ Kompresin/
 │   ├── Models/
 │   │   └── CompressionHistory.php
 │   └── Services/
-│       ├── HuffmanNode.php
-│       └── HuffmanCompressionService.php
-├── database/
-│   └── migrations/
-│       └── xxxx_create_compression_histories_table.php
-├── resources/
-│   └── js/
-│       ├── components/Compression/
-│       │   ├── StatsCard.tsx
-│       │   ├── HuffmanTreeVisualization.tsx
-│       │   ├── HuffmanCodeTable.tsx
-│       │   └── ImagePreview.tsx
-│       └── pages/
-│           ├── Home.tsx
-│           ├── Compression/Index.tsx
-│           ├── Decompression/Index.tsx
-│           └── History/Index.tsx
-└── routes/
-    └── web.php
+│       ├── ImageCompressionService.php
+│       └── FileEncryptionService.php
+├── resources/js/
+│   ├── components/
+│   └── pages/
+│       ├── Compression/
+│       ├── Decompression/
+│       └── History/
+├── routes/
+│   └── web.php
+└── storage/app/public/
 ```
 
-## 🎨 Fitur UI/UX
-
-- **Responsive Design**: Bekerja di desktop, tablet, dan mobile
-- **Dark Mode**: Toggle antara mode terang dan gelap
-- **Smooth Animations**: Transisi halus dengan Framer Motion
-- **Loading States**: Indikator loading saat proses berlangsung
-- **Error Handling**: Pesan error yang jelas dan informatif
-- **Toast Notifications**: Notifikasi sukses/error yang tidak mengganggu
+---
 
 ## 🔐 Keamanan
 
 - CSRF Protection
 - File validation (type & size)
-- SQL Injection prevention dengan Eloquent ORM
-- XSS protection dengan sanitasi input
+- SQL Injection prevention (Eloquent ORM)
+- XSS protection
 
-## 📊 Database Schema
-
-### compression_histories
-
-| Column | Type | Description |
-|--------|------|-------------|
-| id | bigint | Primary key |
-| type | string | 'compress' atau 'decompress' |
-| filename | string | Nama file asli |
-| original_path | string | Path file asli |
-| compressed_path | string | Path file kompres |
-| decompressed_path | string | Path file dekompresi |
-| original_size | bigint | Ukuran asli (bytes) |
-| compressed_size | bigint | Ukuran kompres (bytes) |
-| compression_ratio | decimal(5,2) | Rasio kompresi (%) |
-| bits_per_pixel | decimal(10,4) | BPP |
-| entropy | decimal(10,4) | Entropy |
-| huffman_table | json | Tabel kode Huffman |
-| image_width | integer | Lebar gambar |
-| image_height | integer | Tinggi gambar |
-| created_at | timestamp | Waktu dibuat |
-| updated_at | timestamp | Waktu diupdate |
-
-## 🚧 Pengembangan Selanjutnya
-
-Fitur yang bisa ditambahkan:
-
-- [ ] Dukungan kompresi warna RGB (saat ini grayscale)
-- [ ] Export laporan PDF
-- [ ] Perbandingan multiple algoritma kompresi
-- [ ] Batch compression
-- [ ] API endpoint untuk integrasi
-- [ ] User authentication untuk riwayat personal
-- [ ] Grafik statistik kompresi
+---
 
 ## 📝 Lisensi
 
 MIT License
 
-## 👨‍💻 Kontributor
+---
 
-Dibuat dengan ❤️ menggunakan Laravel, React, dan Tailwind CSS
+## 👨‍💻 Tim Pengembang
 
-## 🐛 Bug Report
+- Danendra Mahardhika (230411100086)
+- Moh Naufal Thoriq (230411100142)
+- Achmad Lutfi Madhani (230411100059)
+- Elvita Dian Prameswari (230411100128)
 
-Jika menemukan bug atau ingin request fitur, silakan buat issue baru.
-
-## 📞 Kontak
-
-Untuk pertanyaan atau diskusi, silakan hubungi melalui issue tracker.
+**Program Studi Teknik Informatika**  
+**Fakultas Teknik - Universitas Trunojoyo Madura**
 
 ---
 
-**Note**: Aplikasi ini dibuat untuk tujuan edukasi dalam memahami algoritma kompresi Huffman Code.
-#   K o m p r e s i n 
- 
-
- 
+Dibuat dengan ❤️ menggunakan Laravel, React, dan Tailwind CSS
