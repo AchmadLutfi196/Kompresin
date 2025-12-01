@@ -254,7 +254,7 @@ export default function Index() {
                                             Dekompresi Berhasil!
                                         </h3>
                                         <p className="mt-1 text-sm text-green-700 dark:text-green-300">
-                                            Gambar telah berhasil dikembalikan ke bentuk aslinya menggunakan tabel Huffman.
+                                            Gambar telah berhasil dikembalikan ke bentuk aslinya.
                                         </p>
                                     </div>
                                 </div>
@@ -315,7 +315,7 @@ export default function Index() {
                             </ol>
                             <p className="mt-4 text-sm text-blue-700 dark:text-blue-300">
                                 <strong>Catatan:</strong> File .bin harus merupakan hasil kompresi dari aplikasi ini 
-                                karena mengandung metadata pohon Huffman yang diperlukan untuk dekompresi.
+                                karena mengandung metadata yang diperlukan untuk dekompresi.
                             </p>
                         </motion.div>
                     )}

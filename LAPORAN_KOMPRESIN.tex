@@ -1,0 +1,1060 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[indonesian]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{longtable}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows, positioning}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{fancyhdr}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{subcaption}
+
+% Page geometry
+\geometry{
+    left=3cm,
+    right=2.5cm,
+    top=2.5cm,
+    bottom=2.5cm
+}
+
+% Line spacing
+\onehalfspacing
+
+% Code listing style
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+\lstset{style=mystyle}
+
+% Header and footer
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Kompresin - Aplikasi Kompresi Gambar}
+\lhead{\leftmark}
+\cfoot{\thepage}
+
+% Flowchart styles
+\tikzstyle{startstop} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=red!30]
+\tikzstyle{process} = [rectangle, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=orange!30]
+\tikzstyle{decision} = [diamond, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=green!30, aspect=2]
+\tikzstyle{io} = [trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=blue!30]
+\tikzstyle{arrow} = [thick,->,>=stealth]
+
+\begin{document}
+
+% ============================================
+% HALAMAN JUDUL
+% ============================================
+\begin{titlepage}
+\begin{center}
+    {\Large\textbf{PENGOLAHAN CITRA DIGITAL}}\\[0.5cm]
+    {\Large\textbf{Implementasi Metode JPEG Quality Reduction untuk Kompresi Citra Digital}}\\[1.5cm]
+
+   \includegraphics[width=0.4\textwidth]{university_logo.png}\\[2cm]
+
+    {\large\textbf{Disusun Oleh :}}\\[0.5cm]
+    
+    \begin{tabular}{l r}
+    DANENDRA MAHARDHIKA & 230411100086 \\
+    MOH NAUFAL THORIQ & 230411100142 \\
+    ACHMAD LUTFI MADHANI & 230411100059 \\
+    ELVITA DIAN PRAMESWARI & 230411100128 \\
+    \end{tabular}\\[1.5cm]
+    
+    {\large\textbf{Dosen Pengampu :}}\\[0.5cm]
+    {\large Prof. Dr. RIMA TRI WAHYUNINGRUM ST., MT}\\
+    {\large NIP. 198008202003122001}\\[1cm]
+
+    {\large\textbf{PROGRAM STUDI TEKNIK INFORMATIKA}}\\
+    {\large\textbf{FAKULTAS TEKNIK}}\\
+    {\large\textbf{UNIVERSITAS TRUNOJOYO MADURA}}\\[1cm]
+
+    {\large\textbf{2025}}
+\end{center}
+\end{titlepage}
+
+% ============================================
+% DAFTAR ISI
+% ============================================
+\tableofcontents
+\newpage
+
+\listoffigures
+\newpage
+
+\listoftables
+\newpage
+
+% ============================================
+% BAB 1: PENDAHULUAN
+% ============================================
+\section{PENDAHULUAN}
+
+\subsection{Latar Belakang}
+
+Perkembangan teknologi digital telah membawa perubahan signifikan dalam cara manusia menyimpan dan berbagi informasi visual. Gambar digital menjadi salah satu media yang paling banyak digunakan dalam berbagai aspek kehidupan, mulai dari media sosial, e-commerce, hingga dokumentasi profesional. Namun, peningkatan kualitas gambar berbanding lurus dengan ukuran file yang semakin besar, sehingga menimbulkan tantangan dalam hal penyimpanan dan transmisi data \cite{gonzalez2018digital}.
+
+Kompresi gambar merupakan teknik yang digunakan untuk mengurangi ukuran file gambar tanpa mengorbankan kualitas visual secara signifikan. Teknik ini sangat penting dalam era digital saat ini, di mana bandwidth internet dan kapasitas penyimpanan masih menjadi pertimbangan utama \cite{salomon2007data}.
+
+JPEG (Joint Photographic Experts Group) merupakan standar kompresi gambar yang paling banyak digunakan di dunia. Metode JPEG Quality Reduction memanfaatkan transformasi DCT (Discrete Cosine Transform) untuk mengonversi data spasial gambar ke domain frekuensi, kemudian melakukan kuantisasi untuk mengurangi informasi yang kurang penting secara visual \cite{wallace1992jpeg}.
+
+\subsection{Rumusan Masalah}
+
+Berdasarkan latar belakang di atas, rumusan masalah dalam penelitian ini adalah:
+\begin{enumerate}
+    \item Bagaimana mengimplementasikan metode JPEG Quality Reduction dalam aplikasi kompresi gambar berbasis web?
+    \item Berapa rasio kompresi yang dapat dicapai untuk berbagai jenis gambar?
+    \item Bagaimana performa aplikasi dalam memproses gambar dengan berbagai ukuran dan karakteristik?
+\end{enumerate}
+
+\subsection{Tujuan}
+
+Tujuan dari pengembangan aplikasi Kompresin adalah:
+\begin{enumerate}
+    \item Membangun aplikasi web yang dapat mengompres gambar menggunakan metode JPEG Quality Reduction
+    \item Menganalisis efektivitas kompresi untuk berbagai kategori gambar
+    \item Menyediakan antarmuka yang mudah digunakan untuk proses kompresi gambar
+\end{enumerate}
+
+\subsection{Manfaat}
+
+Manfaat dari penelitian dan pengembangan aplikasi ini meliputi:
+\begin{enumerate}
+    \item \textbf{Manfaat Praktis:} Pengguna dapat mengompres gambar dengan mudah melalui antarmuka web
+    \item \textbf{Manfaat Akademis:} Memberikan pemahaman tentang implementasi algoritma kompresi gambar
+    \item \textbf{Manfaat Teknis:} Menghemat ruang penyimpanan dan bandwidth dalam transmisi gambar
+\end{enumerate}
+
+% ============================================
+% BAB 2: LANDASAN TEORI
+% ============================================
+\section{LANDASAN TEORI}
+
+\subsection{Kompresi Data}
+
+Kompresi data adalah proses pengurangan jumlah bit yang diperlukan untuk merepresentasikan data. Terdapat dua jenis kompresi data \cite{salomon2007data}:
+
+\begin{enumerate}
+    \item \textbf{Lossless Compression:} Kompresi tanpa kehilangan data, memungkinkan rekonstruksi data asli secara sempurna
+    \item \textbf{Lossy Compression:} Kompresi dengan kehilangan sebagian data, menghasilkan ukuran file yang lebih kecil dengan trade-off kualitas
+\end{enumerate}
+
+\subsection{Format JPEG}
+
+JPEG adalah standar kompresi gambar lossy yang dikembangkan oleh Joint Photographic Experts Group pada tahun 1992. Format ini sangat efektif untuk gambar fotografi dengan gradasi warna yang halus \cite{wallace1992jpeg}.
+
+\subsubsection{Proses Encoding JPEG}
+
+Proses encoding JPEG terdiri dari beberapa tahap:
+
+\begin{enumerate}
+    \item \textbf{Color Space Conversion:} Konversi dari RGB ke YCbCr
+    \item \textbf{Downsampling:} Pengurangan resolusi komponen chrominance
+    \item \textbf{Block Splitting:} Pembagian gambar menjadi blok 8×8 pixel
+    \item \textbf{DCT Transform:} Transformasi ke domain frekuensi
+    \item \textbf{Quantization:} Pembulatan koefisien DCT
+    \item \textbf{Entropy Coding:} Encoding menggunakan Huffman coding
+\end{enumerate}
+
+\subsection{Discrete Cosine Transform (DCT)}
+
+DCT adalah transformasi matematika yang mengonversi sinyal dari domain spasial ke domain frekuensi. Formula 2D-DCT untuk blok 8×8 adalah \cite{gonzalez2018digital}:
+
+\begin{equation}
+F(u,v) = \frac{1}{4} C(u) C(v) \sum_{x=0}^{7} \sum_{y=0}^{7} f(x,y) \cos\left[\frac{(2x+1)u\pi}{16}\right] \cos\left[\frac{(2y+1)v\pi}{16}\right]
+\end{equation}
+
+Di mana:
+\begin{itemize}
+    \item $f(x,y)$ = nilai pixel pada posisi (x,y)
+    \item $F(u,v)$ = koefisien DCT
+    \item $C(u), C(v) = \frac{1}{\sqrt{2}}$ untuk $u,v = 0$, dan $1$ untuk lainnya
+\end{itemize}
+
+\subsection{Kuantisasi}
+
+Kuantisasi adalah proses pembagian koefisien DCT dengan matriks kuantisasi, kemudian membulatkan hasilnya. Proses ini merupakan sumber utama kompresi dan juga kehilangan informasi \cite{pennebaker1992jpeg}.
+
+\begin{equation}
+F_q(u,v) = \text{round}\left(\frac{F(u,v)}{Q(u,v)}\right)
+\end{equation}
+
+Quality factor menentukan tingkat kuantisasi. Semakin rendah quality factor, semakin tinggi kompresi tetapi kualitas gambar menurun.
+
+\subsection{Metrik Evaluasi Kompresi}
+
+\subsubsection{Compression Ratio}
+
+Rasio kompresi dihitung dengan formula:
+
+\begin{equation}
+CR = \left(1 - \frac{\text{Compressed Size}}{\text{Original Size}}\right) \times 100\%
+\end{equation}
+
+\subsubsection{Bits Per Pixel (BPP)}
+
+\begin{equation}
+BPP = \frac{\text{Compressed Size (bits)}}{\text{Width} \times \text{Height}}
+\end{equation}
+
+% ============================================
+% BAB 3: METODOLOGI
+% ============================================
+\section{METODOLOGI}
+
+\subsection{Alur Pengembangan Sistem}
+
+Pengembangan aplikasi Kompresin mengikuti metodologi Agile dengan tahapan sebagai berikut:
+
+\begin{enumerate}
+    \item Analisis kebutuhan sistem
+    \item Perancangan arsitektur sistem
+    \item Implementasi kode program
+    \item Pengujian dan validasi
+    \item Deployment dan dokumentasi
+\end{enumerate}
+
+\subsection{Flowchart Sistem}
+
+\subsubsection{Flowchart Proses Kompresi}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=1.5cm]
+
+\node (start) [startstop] {Mulai};
+\node (input) [io, below of=start] {Input Gambar};
+\node (validate) [decision, below of=input, yshift=-0.5cm] {Valid?};
+\node (error) [process, right of=validate, xshift=3cm] {Tampilkan Error};
+\node (load) [process, below of=validate, yshift=-0.5cm] {Load Image Data};
+\node (convert) [process, below of=load] {Convert to RGB};
+\node (quality) [io, below of=convert] {Set Quality Level};
+\node (compress) [process, below of=quality] {JPEG Compression};
+\node (save) [process, below of=compress] {Save Compressed File};
+\node (calc) [process, below of=save] {Calculate Metrics};
+\node (output) [io, below of=calc] {Output Result};
+\node (stop) [startstop, below of=output] {Selesai};
+
+\draw [arrow] (start) -- (input);
+\draw [arrow] (input) -- (validate);
+\draw [arrow] (validate) -- node[anchor=south] {Tidak} (error);
+\draw [arrow] (error) |- (input);
+\draw [arrow] (validate) -- node[anchor=east] {Ya} (load);
+\draw [arrow] (load) -- (convert);
+\draw [arrow] (convert) -- (quality);
+\draw [arrow] (quality) -- (compress);
+\draw [arrow] (compress) -- (save);
+\draw [arrow] (save) -- (calc);
+\draw [arrow] (calc) -- (output);
+\draw [arrow] (output) -- (stop);
+
+\end{tikzpicture}
+\caption{Flowchart Proses Kompresi Gambar}
+\label{fig:flowchart-compress}
+\end{figure}
+
+\subsubsection{Flowchart Proses Dekompresi}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=1.5cm]
+
+\node (start) [startstop] {Mulai};
+\node (input) [io, below of=start] {Input File .bin};
+\node (validate) [decision, below of=input, yshift=-0.5cm] {Valid Format?};
+\node (error) [process, right of=validate, xshift=3cm] {Tampilkan Error};
+\node (read) [process, below of=validate, yshift=-0.5cm] {Read Metadata};
+\node (extract) [process, below of=read] {Extract JPEG Data};
+\node (decode) [process, below of=extract] {Decode JPEG};
+\node (save) [process, below of=decode] {Save as Image};
+\node (output) [io, below of=save] {Output Image};
+\node (stop) [startstop, below of=output] {Selesai};
+
+\draw [arrow] (start) -- (input);
+\draw [arrow] (input) -- (validate);
+\draw [arrow] (validate) -- node[anchor=south] {Tidak} (error);
+\draw [arrow] (error) |- (input);
+\draw [arrow] (validate) -- node[anchor=east] {Ya} (read);
+\draw [arrow] (read) -- (extract);
+\draw [arrow] (extract) -- (decode);
+\draw [arrow] (decode) -- (save);
+\draw [arrow] (save) -- (output);
+\draw [arrow] (output) -- (stop);
+
+\end{tikzpicture}
+\caption{Flowchart Proses Dekompresi}
+\label{fig:flowchart-decompress}
+\end{figure}
+
+\subsection{Arsitektur Sistem}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=2cm]
+
+% Frontend
+\node (frontend) [process, minimum width=4cm] {Frontend (React/TypeScript)};
+
+% Backend
+\node (backend) [process, below of=frontend, minimum width=4cm] {Backend (Laravel/PHP)};
+
+% Services
+\node (compress) [process, below left of=backend, xshift=-2cm, minimum width=3cm] {Compression Service};
+\node (encrypt) [process, below right of=backend, xshift=2cm, minimum width=3cm] {Encryption Service};
+
+% Storage
+\node (db) [io, below of=compress] {Database (SQLite)};
+\node (storage) [io, below of=encrypt] {File Storage};
+
+\draw [arrow] (frontend) -- (backend);
+\draw [arrow] (backend) -- (compress);
+\draw [arrow] (backend) -- (encrypt);
+\draw [arrow] (compress) -- (db);
+\draw [arrow] (encrypt) -- (storage);
+
+\end{tikzpicture}
+\caption{Arsitektur Sistem Kompresin}
+\label{fig:architecture}
+\end{figure}
+
+\subsection{Teknologi yang Digunakan}
+
+\begin{table}[H]
+\centering
+\caption{Stack Teknologi}
+\label{tab:tech-stack}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Kategori} & \textbf{Teknologi} & \textbf{Versi} \\
+\hline
+Backend Framework & Laravel & 11.x \\
+\hline
+Bahasa Backend & PHP & 8.2+ \\
+\hline
+Frontend Framework & React & 18.x \\
+\hline
+Bahasa Frontend & TypeScript & 5.x \\
+\hline
+Build Tool & Vite & 5.x \\
+\hline
+CSS Framework & Tailwind CSS & 3.x \\
+\hline
+Database & SQLite & 3.x \\
+\hline
+Image Processing & GD Library & - \\
+\hline
+\end{tabular}
+\end{table}
+
+% ============================================
+% BAB 4: IMPLEMENTASI
+% ============================================
+\section{IMPLEMENTASI}
+
+\subsection{Struktur Direktori Proyek}
+
+\begin{lstlisting}[language=bash, caption=Struktur Direktori]
+Kompresin/
+├── app/
+│   ├── Http/
+│   │   └── Controllers/
+│   │       └── CompressionController.php
+│   ├── Models/
+│   │   └── CompressionHistory.php
+│   └── Services/
+│       ├── ImageCompressionService.php
+│       └── FileEncryptionService.php
+├── resources/
+│   └── js/
+│       └── pages/
+│           ├── Compression/
+│           └── Decompression/
+├── routes/
+│   └── web.php
+└── storage/
+    └── app/public/
+\end{lstlisting}
+
+\subsection{Implementasi Service Kompresi}
+
+\subsubsection{Class ImageCompressionService}
+
+\begin{lstlisting}[language=PHP, caption=ImageCompressionService.php - Metode Compress]
+<?php
+
+namespace App\Services;
+
+class ImageCompressionService
+{
+    /**
+     * Compress image using JPEG Quality Reduction
+     * 
+     * @param string $imagePath Path to input image
+     * @param string $format Output format (jpg/bin)
+     * @param int $quality JPEG quality (1-100)
+     * @return array Compression result
+     */
+    public function compress(
+        string $imagePath, 
+        string $format = 'jpg', 
+        int $quality = 75
+    ): array {
+        $startTime = microtime(true);
+        
+        // Get original file info
+        $originalSize = filesize($imagePath);
+        $imageInfo = getimagesize($imagePath);
+        $width = $imageInfo[0];
+        $height = $imageInfo[1];
+        $mimeType = $imageInfo['mime'];
+        
+        // Load image based on type
+        $image = $this->loadImage($imagePath, $mimeType);
+        
+        if (!$image) {
+            throw new \Exception("Failed to load image");
+        }
+        
+        // Ensure true color for consistent processing
+        if (!imageistruecolor($image)) {
+            $trueColorImage = imagecreatetruecolor($width, $height);
+            imagecopy($trueColorImage, $image, 0, 0, 0, 0, 
+                      $width, $height);
+            imagedestroy($image);
+            $image = $trueColorImage;
+        }
+        
+        // Create output buffer for JPEG
+        ob_start();
+        imagejpeg($image, null, $quality);
+        $compressedData = ob_get_clean();
+        
+        imagedestroy($image);
+        
+        $compressionTime = microtime(true) - $startTime;
+        $compressedSize = strlen($compressedData);
+        
+        // Calculate metrics
+        $compressionRatio = (1 - ($compressedSize / $originalSize)) 
+                           * 100;
+        $bitsPerPixel = ($compressedSize * 8) / ($width * $height);
+        
+        return [
+            'compressed_data' => $compressedData,
+            'compressed_size' => $compressedSize,
+            'original_size' => $originalSize,
+            'compression_ratio' => $compressionRatio,
+            'bits_per_pixel' => $bitsPerPixel,
+            'width' => $width,
+            'height' => $height,
+            'quality' => $quality,
+            'compression_time' => $compressionTime,
+            'algorithm' => 'JPEG Quality Reduction',
+        ];
+    }
+    
+    /**
+     * Load image from file
+     */
+    private function loadImage(string $path, string $mimeType)
+    {
+        switch ($mimeType) {
+            case 'image/jpeg':
+                return imagecreatefromjpeg($path);
+            case 'image/png':
+                return imagecreatefrompng($path);
+            case 'image/bmp':
+                return imagecreatefrombmp($path);
+            case 'image/gif':
+                return imagecreatefromgif($path);
+            default:
+                return false;
+        }
+    }
+}
+\end{lstlisting}
+
+\subsubsection{Metode Save Compressed File}
+
+\begin{lstlisting}[language=PHP, caption=Metode saveCompressedFile]
+/**
+ * Save compressed data to file
+ * 
+ * @param array $compressionResult Result from compress()
+ * @param string $originalFilename Original filename
+ * @param string $format Output format
+ * @return array File information
+ */
+public function saveCompressedFile(
+    array $compressionResult,
+    string $originalFilename,
+    string $format = 'jpg'
+): array {
+    $timestamp = time();
+    $baseName = pathinfo($originalFilename, PATHINFO_FILENAME);
+    
+    if ($format === 'bin') {
+        // Binary format with metadata
+        $filename = "compressed_{$timestamp}.bin";
+        $metadata = [
+            'original_filename' => $originalFilename,
+            'width' => $compressionResult['width'],
+            'height' => $compressionResult['height'],
+            'quality' => $compressionResult['quality'],
+            'algorithm' => $compressionResult['algorithm'],
+            'timestamp' => $timestamp,
+        ];
+        
+        $content = $this->createBinaryFormat(
+            $compressionResult['compressed_data'],
+            $metadata
+        );
+    } else {
+        // Direct JPEG output
+        $filename = "compressed_{$timestamp}.jpg";
+        $content = $compressionResult['compressed_data'];
+    }
+    
+    $path = "public/compressed/{$filename}";
+    Storage::put($path, $content);
+    
+    return [
+        'filename' => $filename,
+        'path' => $path,
+        'size' => strlen($content),
+    ];
+}
+\end{lstlisting}
+
+\subsection{Implementasi Controller}
+
+\begin{lstlisting}[language=PHP, caption=CompressionController.php]
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Services\ImageCompressionService;
+use App\Models\CompressionHistory;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class CompressionController extends Controller
+{
+    protected $compressionService;
+    
+    public function __construct(ImageCompressionService $service)
+    {
+        $this->compressionService = $service;
+    }
+    
+    /**
+     * Handle image compression request
+     */
+    public function compress(Request $request)
+    {
+        $request->validate([
+            'image' => 'required|image|max:10240',
+            'format' => 'in:jpg,bin',
+            'quality' => 'integer|min:1|max:100',
+        ]);
+        
+        try {
+            $file = $request->file('image');
+            $format = $request->input('format', 'jpg');
+            $quality = $request->input('quality', 75);
+            
+            // Store original file
+            $originalPath = $file->store('public/originals');
+            $fullPath = storage_path('app/' . $originalPath);
+            
+            // Compress image
+            $result = $this->compressionService->compress(
+                $fullPath, $format, $quality
+            );
+            
+            // Save compressed file
+            $compressedFile = $this->compressionService
+                ->saveCompressedFile(
+                    $result,
+                    $file->getClientOriginalName(),
+                    $format
+                );
+            
+            // Save to history
+            $history = CompressionHistory::create([
+                'user_id' => Auth::id(),
+                'type' => 'compress',
+                'filename' => $file->getClientOriginalName(),
+                'original_path' => $originalPath,
+                'compressed_path' => $compressedFile['path'],
+                'original_size' => $result['original_size'],
+                'compressed_size' => $result['compressed_size'],
+                'compression_ratio' => $result['compression_ratio'],
+                'image_width' => $result['width'],
+                'image_height' => $result['height'],
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Image compressed successfully',
+                'data' => [
+                    'original_size' => $result['original_size'],
+                    'compressed_size' => $result['compressed_size'],
+                    'compression_ratio' => $result['compression_ratio'],
+                    'width' => $result['width'],
+                    'height' => $result['height'],
+                    'compressed_file_url' => route(
+                        'download.compressed', 
+                        $history->id
+                    ),
+                    'algorithm' => $result['algorithm'],
+                ],
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Compression failed: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+}
+\end{lstlisting}
+
+\subsection{Implementasi Frontend}
+
+\begin{lstlisting}[language=JavaScript, caption=Compression/Index.tsx - Handle Compress]
+const handleCompress = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!selectedFile) {
+        SweetAlert.warning('File Belum Dipilih', 
+            'Silakan pilih file gambar terlebih dahulu');
+        return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    const formData = new FormData();
+    formData.append('image', selectedFile);
+    formData.append('format', selectedFormat);
+
+    try {
+        const response = await fetch('/compress', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': document
+                    .querySelector('meta[name="csrf-token"]')
+                    ?.getAttribute('content') || '',
+            },
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            setResult(data.data);
+            SweetAlert.toast.success(
+                'Kompresi berhasil!'
+            );
+        } else {
+            SweetAlert.error('Kompresi Gagal', data.message);
+        }
+    } catch (err) {
+        SweetAlert.error('Kesalahan Jaringan', 
+            'Tidak dapat terhubung ke server');
+    } finally {
+        setLoading(false);
+    }
+};
+\end{lstlisting}
+
+\subsection{Algoritma JPEG Quality Reduction}
+
+\begin{algorithm}[H]
+\caption{JPEG Quality Reduction Compression}
+\begin{algorithmic}[1]
+\Require Image $I$, Quality $Q$ (1-100)
+\Ensure Compressed image data $C$
+
+\State Load image $I$ into memory
+\State Convert to true color if indexed
+
+\For{each 8×8 block in $I$}
+    \State Apply DCT transform
+    \State Quantize coefficients using quality $Q$
+    \State Apply zigzag scan
+    \State Encode using Huffman coding
+\EndFor
+
+\State Combine all encoded blocks
+\State Add JPEG headers and markers
+\State \Return Compressed data $C$
+\end{algorithmic}
+\end{algorithm}
+
+% ============================================
+% BAB 5: PENGUJIAN
+% ============================================
+\section{PENGUJIAN DAN HASIL}
+
+\subsection{Dataset Pengujian}
+
+Dataset yang digunakan dalam pengujian terdiri dari 34 gambar yang dibagi menjadi 4 kategori:
+
+\begin{table}[H]
+\centering
+\caption{Komposisi Dataset}
+\label{tab:dataset}
+\begin{tabular}{|l|c|l|l|}
+\hline
+\textbf{Kategori} & \textbf{Jumlah} & \textbf{Format} & \textbf{Karakteristik} \\
+\hline
+Logo & 4 & PNG & Grafis dengan transparansi \\
+\hline
+Manusia & 10 & JPEG & Foto portrait dan grup \\
+\hline
+Pemandangan Alam & 10 & JPEG & Foto landscape \\
+\hline
+Warna Solid & 10 & JPEG & Gambar satu warna \\
+\hline
+\textbf{Total} & \textbf{34} & - & - \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Hasil Pengujian}
+
+\subsubsection{Hasil Per Kategori}
+
+\begin{table}[H]
+\centering
+\caption{Hasil Kompresi Per Kategori}
+\label{tab:results-category}
+\begin{tabular}{|l|r|r|r|r|}
+\hline
+\textbf{Kategori} & \textbf{Original} & \textbf{Compressed} & \textbf{Rasio} & \textbf{Status} \\
+\hline
+Logo (PNG) & 27.85 KB & 7.87 KB & 71.76\% & Excellent \\
+\hline
+Manusia & 219.46 KB & 42.40 KB & 80.68\% & Excellent \\
+\hline
+Pemandangan Alam & 119.21 KB & 18.12 KB & 84.80\% & Excellent \\
+\hline
+Warna Solid & 15.38 KB & 14.99 KB & 2.53\% & Minimal \\
+\hline
+\textbf{TOTAL} & \textbf{381.91 KB} & \textbf{83.38 KB} & \textbf{78.17\%} & - \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Statistik Keseluruhan}
+
+\begin{table}[H]
+\centering
+\caption{Statistik Keseluruhan}
+\label{tab:overall-stats}
+\begin{tabular}{|l|r|}
+\hline
+\textbf{Metrik} & \textbf{Nilai} \\
+\hline
+Total file diuji & 34 \\
+\hline
+File berhasil dikompres & 29 (85\%) \\
+\hline
+File menjadi lebih besar & 5 (15\%) \\
+\hline
+Rasio kompresi rata-rata & 78.17\% \\
+\hline
+Total penghematan & 298.53 KB \\
+\hline
+Waktu kompresi rata-rata & 18 ms/file \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Detail Hasil - Kategori Manusia}
+
+\begin{table}[H]
+\centering
+\caption{Detail Hasil Kompresi - Foto Manusia}
+\label{tab:detail-manusia}
+\begin{tabular}{|l|r|r|r|r|}
+\hline
+\textbf{Filename} & \textbf{Original} & \textbf{Compressed} & \textbf{Rasio} & \textbf{Dimensi} \\
+\hline
+manusia\_1.jpeg & 8.14 KB & 1.70 KB & 79.11\% & 183×275 \\
+\hline
+manusia\_2.jpeg & 4.08 KB & 1.63 KB & 60.07\% & 243×207 \\
+\hline
+manusia\_3.jpeg & 4.80 KB & 1.68 KB & 65.08\% & 275×183 \\
+\hline
+manusia\_4.jpg & 16.83 KB & 4.97 KB & 70.47\% & 612×408 \\
+\hline
+manusia\_5.jpg & 19.26 KB & 5.08 KB & 73.63\% & 612×408 \\
+\hline
+manusia\_6.jpg & 31.26 KB & 5.52 KB & 82.35\% & 612×408 \\
+\hline
+manusia\_7.jpg & 36.21 KB & 5.07 KB & 85.99\% & 612×376 \\
+\hline
+manusia\_8.jpg & 29.60 KB & 5.59 KB & 81.12\% & 612×408 \\
+\hline
+manusia\_9.jpg & 42.57 KB & 5.93 KB & 86.07\% & 612×408 \\
+\hline
+manusia\_10.jpg & 26.71 KB & 5.24 KB & 80.38\% & 612×408 \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Detail Hasil - Pemandangan Alam}
+
+\begin{table}[H]
+\centering
+\caption{Detail Hasil Kompresi - Pemandangan Alam}
+\label{tab:detail-alam}
+\begin{tabular}{|l|r|r|r|r|}
+\hline
+\textbf{Filename} & \textbf{Original} & \textbf{Compressed} & \textbf{Rasio} & \textbf{Dimensi} \\
+\hline
+alam\_1.jpeg & 8.61 KB & 1.67 KB & 80.56\% & 274×184 \\
+\hline
+alam\_2.jpeg & 11.78 KB & 1.83 KB & 84.46\% & 318×159 \\
+\hline
+alam\_3.jpeg & 9.12 KB & 1.69 KB & 81.46\% & 298×169 \\
+\hline
+alam\_4.jpeg & 9.62 KB & 1.74 KB & 81.96\% & 259×194 \\
+\hline
+alam\_5.jpeg & 17.81 KB & 1.93 KB & 89.14\% & 300×168 \\
+\hline
+alam\_6.jpeg & 11.03 KB & 1.85 KB & 83.25\% & 275×183 \\
+\hline
+alam\_7.jpeg & 15.51 KB & 1.84 KB & 88.15\% & 276×183 \\
+\hline
+alam\_8.jpeg & 12.78 KB & 2.02 KB & 84.20\% & 284×177 \\
+\hline
+alam\_9.jpeg & 13.95 KB & 1.83 KB & 86.91\% & 300×168 \\
+\hline
+alam\_10.jpeg & 9.00 KB & 1.72 KB & 80.84\% & 275×183 \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Analisis Hasil}
+
+\subsubsection{Efektivitas Kompresi}
+
+Berdasarkan hasil pengujian, dapat disimpulkan bahwa:
+
+\begin{enumerate}
+    \item \textbf{Foto Natural (Manusia \& Pemandangan):} Metode JPEG Quality Reduction sangat efektif dengan rasio kompresi 80-85\%
+    \item \textbf{Grafis PNG:} Konversi dari PNG ke JPEG memberikan penghematan signifikan (71\%)
+    \item \textbf{Gambar Solid Color:} Kompresi kurang efektif karena file sudah sangat kecil dan JPEG memiliki overhead minimum
+\end{enumerate}
+
+\subsubsection{Faktor yang Mempengaruhi Kompresi}
+
+\begin{enumerate}
+    \item \textbf{Kompleksitas Gambar:} Gambar dengan detail kompleks menghasilkan rasio kompresi lebih rendah
+    \item \textbf{Ukuran File Original:} File yang lebih besar cenderung memiliki rasio kompresi lebih tinggi
+    \item \textbf{Quality Level:} Semakin rendah quality, semakin tinggi kompresi (dengan trade-off kualitas)
+\end{enumerate}
+
+% ============================================
+% BAB 6: KESIMPULAN
+% ============================================
+\section{KESIMPULAN DAN SARAN}
+
+\subsection{Kesimpulan}
+
+Berdasarkan penelitian dan pengembangan aplikasi Kompresin, dapat disimpulkan bahwa:
+
+\begin{enumerate}
+    \item Aplikasi Kompresin berhasil diimplementasikan menggunakan metode JPEG Quality Reduction dengan teknologi Laravel dan React
+    
+    \item Hasil pengujian menunjukkan rata-rata rasio kompresi sebesar \textbf{78.17\%} dengan tingkat keberhasilan \textbf{85\%} (29 dari 34 file)
+    
+    \item Metode JPEG Quality Reduction sangat efektif untuk:
+    \begin{itemize}
+        \item Foto manusia (rasio 80.68\%)
+        \item Foto pemandangan alam (rasio 84.80\%)
+        \item Konversi PNG ke JPEG (rasio 71.76\%)
+    \end{itemize}
+    
+    \item Metode ini kurang efektif untuk gambar dengan warna solid yang ukurannya sudah sangat kecil
+    
+    \item Performa aplikasi cukup baik dengan rata-rata waktu kompresi 18ms per file
+\end{enumerate}
+
+\subsection{Saran}
+
+Untuk pengembangan lebih lanjut, disarankan:
+
+\begin{enumerate}
+    \item Menambahkan opsi quality level yang dapat disesuaikan oleh pengguna
+    \item Implementasi kompresi batch untuk multiple files
+    \item Menambahkan preview perbandingan kualitas sebelum dan sesudah kompresi
+    \item Implementasi metode lossless compression sebagai alternatif
+    \item Optimasi untuk mobile devices
+\end{enumerate}
+
+% ============================================
+% DAFTAR PUSTAKA
+% ============================================
+\newpage
+\begin{thebibliography}{99}
+
+\bibitem{gonzalez2018digital}
+Gonzalez, R. C., \& Woods, R. E. (2018). 
+\textit{Digital Image Processing} (4th ed.). 
+Pearson Education.
+
+\bibitem{salomon2007data}
+Salomon, D. (2007). 
+\textit{Data Compression: The Complete Reference} (4th ed.). 
+Springer-Verlag.
+
+\bibitem{wallace1992jpeg}
+Wallace, G. K. (1992). 
+The JPEG still picture compression standard. 
+\textit{IEEE Transactions on Consumer Electronics}, 38(1), xviii-xxxiv.
+DOI: 10.1109/30.125072
+
+\bibitem{pennebaker1992jpeg}
+Pennebaker, W. B., \& Mitchell, J. L. (1992). 
+\textit{JPEG: Still Image Data Compression Standard}. 
+Van Nostrand Reinhold.
+
+\bibitem{jpeg2024}
+Independent JPEG Group. (2024). 
+JPEG Image Compression FAQ. 
+Retrieved from \url{https://www.ijg.org}
+
+\bibitem{hudson2017jpeg}
+Hudson, G., Léger, A., Niss, B., Sebestyén, I., \& Vaaben, J. (2018). 
+JPEG-1 standard 25 years: Past, present, and future reasons for a success. 
+\textit{Journal of Electronic Imaging}, 27(4), 040901.
+DOI: 10.1117/1.JEI.27.4.040901
+
+\bibitem{ahmed1974dct}
+Ahmed, N., Natarajan, T., \& Rao, K. R. (1974). 
+Discrete cosine transform. 
+\textit{IEEE Transactions on Computers}, C-23(1), 90-93.
+DOI: 10.1109/T-C.1974.223784
+
+\bibitem{rao2014discrete}
+Rao, K. R., \& Yip, P. (2014). 
+\textit{Discrete Cosine Transform: Algorithms, Advantages, Applications}. 
+Academic Press.
+
+\end{thebibliography}
+
+% ============================================
+% LAMPIRAN
+% ============================================
+\newpage
+\appendix
+\section{Lampiran}
+
+\subsection{Konfigurasi Environment}
+
+\begin{lstlisting}[caption=File .env Configuration]
+APP_NAME=Kompresin
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://localhost
+
+DB_CONNECTION=sqlite
+DB_DATABASE=/path/to/database.sqlite
+
+FILESYSTEM_DISK=local
+\end{lstlisting}
+
+\subsection{Database Migration}
+
+\begin{lstlisting}[language=PHP, caption=Migration File]
+Schema::create('compression_histories', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('user_id')->nullable();
+    $table->string('type'); // compress or decompress
+    $table->string('filename');
+    $table->string('original_path')->nullable();
+    $table->string('compressed_path')->nullable();
+    $table->string('decompressed_path')->nullable();
+    $table->bigInteger('original_size');
+    $table->bigInteger('compressed_size');
+    $table->decimal('compression_ratio', 10, 2);
+    $table->decimal('bits_per_pixel', 10, 4)->nullable();
+    $table->decimal('entropy', 10, 4)->nullable();
+    $table->integer('image_width')->nullable();
+    $table->integer('image_height')->nullable();
+    $table->timestamps();
+});
+\end{lstlisting}
+
+\subsection{Route Configuration}
+
+\begin{lstlisting}[language=PHP, caption=routes/web.php]
+// Compression routes
+Route::get('/compress', [CompressionController::class, 'index'])
+    ->name('compress');
+Route::post('/compress', [CompressionController::class, 'compress'])
+    ->name('compress.process');
+
+// Decompression routes
+Route::get('/decompress', [CompressionController::class, 'decompressPage'])
+    ->name('decompress');
+Route::post('/decompress', [CompressionController::class, 'decompress'])
+    ->name('decompress.process');
+
+// Public download routes
+Route::get('/download/compressed/{id}', 
+    [CompressionController::class, 'downloadCompressedFile'])
+    ->name('download.compressed');
+Route::get('/download/decompressed/{id}', 
+    [CompressionController::class, 'downloadDecompressedFile'])
+    ->name('download.decompressed');
+
+// Preview routes
+Route::get('/preview/original/{id}', 
+    [CompressionController::class, 'previewOriginalFile'])
+    ->name('preview.original');
+Route::get('/preview/compressed/{id}', 
+    [CompressionController::class, 'previewCompressedFile'])
+    ->name('preview.compressed');
+\end{lstlisting}
+
+\end{document}

@@ -168,7 +168,6 @@ class CompressionController extends Controller
                 'compression_ratio' => $compressionRatio,
                 'bits_per_pixel' => $compressionResult['bits_per_pixel'],
                 'entropy' => $quality, // Store quality instead of entropy
-                'huffman_table' => [], // Not used in JPEG compression
                 'image_width' => $compressionResult['width'],
                 'image_height' => $compressionResult['height'],
             ]);

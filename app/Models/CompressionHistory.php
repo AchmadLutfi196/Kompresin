@@ -18,13 +18,11 @@ class CompressionHistory extends Model
         'compression_ratio',
         'bits_per_pixel',
         'entropy',
-        'huffman_table',
         'image_width',
         'image_height',
     ];
 
     protected $casts = [
-        'huffman_table' => 'array',
         'original_size' => 'integer',
         'compressed_size' => 'integer',
         'compression_ratio' => 'decimal:2',

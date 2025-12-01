@@ -456,13 +456,13 @@ class ImageCompressionService
                 ];
             }
             
-            // Try old KOMPRSN format for backward compatibility
+            // Try old format for backward compatibility
             if ($magic === 'KOMPRSN2' || $magic === 'KOMPRSN1') {
-                throw new \Exception("This file uses the old Huffman compression format. Please re-compress with the new JPEG Quality method.");
+                throw new \Exception("File ini menggunakan format kompresi lama. Silakan kompres ulang dengan metode JPEG Quality.");
             }
         }
         
-        throw new \Exception("Unsupported file format");
+        throw new \Exception("Format file tidak didukung");
     }
 
     /**
