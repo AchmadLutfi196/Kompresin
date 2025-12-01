@@ -55,7 +55,7 @@ export default function Index() {
         setError('');
 
         // Show loading notification
-        SweetAlert.loading('Memproses Dekompresi', 'Sedang mendekompresi file menggunakan algoritma Huffman...');
+        SweetAlert.loading('Memproses Dekompresi', 'Sedang mendekompresi file...');
 
         const formData = new FormData();
         formData.append('compressed_file', selectedFile);

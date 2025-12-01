@@ -2,8 +2,6 @@ import { useState, FormEvent, ChangeEvent } from 'react';
 import { Link, Head } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import StatsCard from '@/components/Compression/StatsCard';
-import HuffmanTreeVisualization from '@/components/Compression/HuffmanTreeVisualization';
-import HuffmanCodeTable from '@/components/Compression/HuffmanCodeTable';
 import ImagePreview from '@/components/Compression/ImagePreview';
 import AppHeader from '@/components/AppHeader';
 import { SweetAlert } from '@/utils/sweetAlert';
@@ -21,15 +19,9 @@ interface CompressionResult {
     compressed_file_url: string;
     compressed_filename: string;
     original_image_url: string;
-    algorithm?: string; // Algorithm used (DEFLATE, etc)
+    algorithm?: string; // Algorithm used (JPEG Quality)
     compression_time?: number; // Time taken for compression
-    huffman_tree: any;
-    huffman_codes: Array<{
-        symbol: number;
-        frequency: number;
-        code: string;
-        bits: number;
-    }>;
+    quality_level?: number; // JPEG quality level used
 }
 
 export default function Index() {
@@ -114,7 +106,7 @@ export default function Index() {
         setError('');
 
         // Show loading notification
-        SweetAlert.loading('Memproses Kompresi', 'Sedang mengompres gambar menggunakan algoritma Huffman...');
+        SweetAlert.loading('Memproses Kompresi', 'Sedang mengompres gambar menggunakan JPEG Quality Reduction...');
 
         const formData = new FormData();
         formData.append('image', selectedFile);
@@ -136,7 +128,7 @@ export default function Index() {
                 setResult(data.data);
                 
                 // Show success notification
-                SweetAlert.toast.success('Kompresi berhasil! File telah dikompres dengan algoritma Huffman');
+                SweetAlert.toast.success('Kompresi berhasil! File telah dikompres dengan JPEG Quality Reduction');
             } else {
                 SweetAlert.error('Kompresi Gagal', data.message || 'Terjadi kesalahan saat memproses file');
             }
@@ -176,44 +168,11 @@ export default function Index() {
                             Kompresi Gambar
                         </h1>
                         <p className="text-gray-600 dark:text-gray-400">
-                            Upload gambar untuk dikompres menggunakan algoritma Huffman Code
+                            Upload gambar untuk dikompres menggunakan metode JPEG Quality Reduction
                         </p>
                     </motion.div>
 
-                    {/* Warning Box - Important Info */}
-                    <motion.div
-                        variants={cardVariants}
-                        whileHover={{ scale: 1.02, y: -2 }}
-                        className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-5 mb-6 backdrop-blur-sm"
-                    >
-                        <div className="flex gap-3">
-                            <motion.div 
-                                className="flex-shrink-0"
-                                animate={iconFloat}
-                            >
-                                <svg className="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                </svg>
-                            </motion.div>
-                            <div className="flex-1">
-                                <h3 className="text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
-                                    ⚠️ Penting: Keterbatasan Huffman Coding untuk Gambar
-                                </h3>
-                                <div className="text-sm text-yellow-700 dark:text-yellow-300 space-y-2">
-                                    <p>
-                                        <strong>File JPG/PNG akan jadi LEBIH BESAR</strong> karena sudah terkompresi dengan algoritma lebih efisien (DCT, LZW).
-                                    </p>
-                                    <p className="text-xs">
-                                        <strong>✅ Cocok untuk:</strong> BMP, gambar sederhana, logo, diagram<br/>
-                                        <strong>❌ Tidak cocok untuk:</strong> JPG foto natural, PNG kompleks
-                                    </p>
-                                    <p className="text-xs italic">
-                                        Aplikasi ini dibuat untuk <strong>pembelajaran algoritma Huffman</strong>, bukan untuk kompresi praktis.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </motion.div>
+                    
 
                     {/* Upload Form */}
                     <motion.div
@@ -284,7 +243,7 @@ export default function Index() {
                                     Pilih Format File Hasil Kompresi
                                 </label>
                                 <motion.div 
-                                    className="grid grid-cols-2 md:grid-cols-4 gap-3"
+                                    className="grid grid-cols-2 gap-4"
                                     variants={containerVariants}
                                     initial="hidden"
                                     animate="visible"
@@ -292,7 +251,7 @@ export default function Index() {
                                     <motion.button
                                         type="button"
                                         onClick={() => setSelectedFormat('jpg')}
-                                        className={`relative flex flex-col items-center p-4 rounded-lg border-2 transition-all ${
+                                        className={`relative flex flex-col items-center p-6 rounded-lg border-2 transition-all ${
                                             selectedFormat === 'jpg'
                                                 ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20 shadow-lg'
                                                 : 'border-gray-300 dark:border-gray-600 hover:border-teal-300'
@@ -301,66 +260,15 @@ export default function Index() {
                                         whileHover={{ scale: 1.05, y: -2 }}
                                         whileTap={{ scale: 0.95 }}
                                     >
-                                        <svg className="w-8 h-8 mb-2 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-10 h-10 mb-3 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
-                                        <span className="font-semibold text-sm">JPG</span>
-                                        <span className="text-xs text-gray-500 mt-1">Image Output</span>
+                                        <span className="font-semibold text-base">JPG</span>
+                                        <span className="text-sm text-gray-500 mt-1 text-center">Hasil Gambar Langsung</span>
+                                        <span className="text-xs text-gray-400 mt-1">Siap ditampilkan</span>
                                         {selectedFormat === 'jpg' && (
-                                            <div className="absolute top-2 right-2">
-                                                <svg className="w-5 h-5 text-teal-600" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                                </svg>
-                                            </div>
-                                        )}
-                                    </motion.button>
-
-                                    <motion.button
-                                        type="button"
-                                        onClick={() => setSelectedFormat('json')}
-                                        className={`relative flex flex-col items-center p-4 rounded-lg border-2 transition-all ${
-                                            selectedFormat === 'json'
-                                                ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20 shadow-lg'
-                                                : 'border-gray-300 dark:border-gray-600 hover:border-cyan-300'
-                                        }`}
-                                        variants={cardVariants}
-                                        whileHover={{ scale: 1.05, y: -2 }}
-                                        whileTap={{ scale: 0.95 }}
-                                    >
-                                        <svg className="w-8 h-8 mb-2 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                                        </svg>
-                                        <span className="font-semibold text-sm">JSON</span>
-                                        <span className="text-xs text-gray-500 mt-1">Structured</span>
-                                        {selectedFormat === 'json' && (
-                                            <div className="absolute top-2 right-2">
-                                                <svg className="w-5 h-5 text-cyan-600" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                                </svg>
-                                            </div>
-                                        )}
-                                    </motion.button>
-
-                                    <motion.button
-                                        type="button"
-                                        onClick={() => setSelectedFormat('zip')}
-                                        className={`relative flex flex-col items-center p-4 rounded-lg border-2 transition-all ${
-                                            selectedFormat === 'zip'
-                                                ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 shadow-lg'
-                                                : 'border-gray-300 dark:border-gray-600 hover:border-purple-300'
-                                        }`}
-                                        variants={cardVariants}
-                                        whileHover={{ scale: 1.05, y: -2 }}
-                                        whileTap={{ scale: 0.95 }}
-                                    >
-                                        <svg className="w-8 h-8 mb-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                                        </svg>
-                                        <span className="font-semibold text-sm">ZIP</span>
-                                        <span className="text-xs text-gray-500 mt-1">Archive</span>
-                                        {selectedFormat === 'zip' && (
-                                            <div className="absolute top-2 right-2">
-                                                <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                                            <div className="absolute top-3 right-3">
+                                                <svg className="w-6 h-6 text-teal-600" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                                 </svg>
                                             </div>
@@ -370,7 +278,7 @@ export default function Index() {
                                     <motion.button
                                         type="button"
                                         onClick={() => setSelectedFormat('bin')}
-                                        className={`relative flex flex-col items-center p-4 rounded-lg border-2 transition-all ${
+                                        className={`relative flex flex-col items-center p-6 rounded-lg border-2 transition-all ${
                                             selectedFormat === 'bin'
                                                 ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20 shadow-lg'
                                                 : 'border-gray-300 dark:border-gray-600 hover:border-orange-300'
@@ -379,22 +287,24 @@ export default function Index() {
                                         whileHover={{ scale: 1.05, y: -2 }}
                                         whileTap={{ scale: 0.95 }}
                                     >
-                                        <svg className="w-8 h-8 mb-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-10 h-10 mb-3 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
                                         </svg>
-                                        <span className="font-semibold text-sm">BIN</span>
-                                        <span className="text-xs text-gray-500 mt-1">Binary</span>
+                                        <span className="font-semibold text-base">BIN</span>
+                                        <span className="text-sm text-gray-500 mt-1 text-center">Ukuran Terkecil</span>
+                                        <span className="text-xs text-gray-400 mt-1">Maximum compression</span>
                                         {selectedFormat === 'bin' && (
-                                            <div className="absolute top-2 right-2">
-                                                <svg className="w-5 h-5 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
+                                            <div className="absolute top-3 right-3">
+                                                <svg className="w-6 h-6 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                                 </svg>
                                             </div>
                                         )}
                                     </motion.button>
                                 </motion.div>
-                                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                    💡 <span className="text-orange-600 font-medium">BIN: Ukuran terkecil</span> | <span className="text-teal-600 font-medium">JPG: Hasil gambar langsung</span> | JSON/ZIP: Data portabel
+                                <p className="mt-3 text-sm text-gray-600 dark:text-gray-400 text-center">
+                                    💡 <span className="text-orange-600 font-medium">BIN</span>: File kompresi mentah (ukuran minimal) | 
+                                    <span className="text-teal-600 font-medium"> JPG</span>: Gambar hasil dekompresi (siap tampil)
                                 </p>
                             </div>
 
@@ -539,7 +449,7 @@ export default function Index() {
                                     </div>
                                     <div className="flex-1">
                                         <p className="text-sm font-semibold text-teal-900 dark:text-teal-100">
-                                            {result.algorithm || 'DEFLATE (LZ77 + Huffman)'}
+                                            {result.algorithm || 'JPEG Quality Reduction'}
                                             {result.compression_time && (
                                                 <span className="ml-2 text-xs bg-teal-200 dark:bg-teal-800 px-2 py-1 rounded-full font-medium">
                                                     ⚡ {(result.compression_time * 1000).toFixed(0)}ms
@@ -547,7 +457,7 @@ export default function Index() {
                                             )}
                                         </p>
                                         <p className="text-xs text-teal-700 dark:text-teal-300 mt-1">
-                                            Industry-standard compression • ZIP/GZIP compatible
+                                            Lossy compression • Adjustable quality level
                                         </p>
                                     </div>
                                 </div>
@@ -584,38 +494,56 @@ export default function Index() {
                                         : 'text-yellow-700 dark:text-yellow-300'
                                 }`}>
                                     <strong>💡 Penjelasan:</strong> {result.file_compression_ratio > 0 ? (
-                                        <>DEFLATE (LZ77 + Huffman) berhasil mengompresi pixel data! Ini bagus untuk gambar dengan pola repetitif.</>
+                                        <>JPEG Quality Reduction berhasil mengompresi gambar! Parameter kualitas mengontrol ukuran vs kualitas output.</>
                                     ) : (
                                         <>
-                                            DEFLATE bekerja pada pixel data RAW (grayscale). 
-                                            File JPG sudah terkompresi dengan algoritma DCT yang <strong>10-20x lebih efisien</strong>. 
-                                            Hasil .bin lebih besar karena: <br/>
-                                            1. Kehilangan kompresi JPG original (DCT + Quantization)<br/>
-                                            2. Overhead header (~6 bytes)<br/>
-                                            3. Grayscale conversion loss<br/>
-                                            <strong>Gunakan BMP/PNG sederhana untuk hasil optimal.</strong>
+                                            File JPG sudah terkompresi dengan algoritma DCT yang sangat efisien. 
+                                            Hasil lebih besar karena re-encoding atau konversi format.<br/>
+                                            <strong>Gunakan gambar dengan kualitas tinggi untuk hasil kompresi optimal.</strong>
                                         </>
                                     )}
                                 </p>
                             </motion.div>
 
-                            {/* Download Button */}
+                            {/* Download Button with File Info */}
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.3 }}
                                 className="mb-8"
                             >
+                                <div className="bg-white/80 dark:bg-gray-800/80 rounded-lg p-4 mb-4 border border-gray-200 dark:border-gray-700">
+                                    <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">📁 Informasi File Kompres</h4>
+                                    <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-400">
+                                        <div>
+                                            <strong>Nama File:</strong> {result.compressed_filename}
+                                        </div>
+                                        <div>
+                                            <strong>Ukuran File:</strong> {formatBytes(result.compressed_size)}
+                                        </div>
+                                        <div>
+                                            <strong>Format:</strong> {selectedFormat.toUpperCase()}
+                                        </div>
+                                        <div>
+                                            <strong>Algoritma:</strong> {result.algorithm || 'DEFLATE'}
+                                        </div>
+                                    </div>
+                                </div>
+                                
                                 <a
                                     href={result.compressed_file_url}
                                     download={result.compressed_filename}
-                                    className="inline-flex items-center bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                                    className="inline-flex items-center bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors shadow-lg hover:shadow-xl"
                                 >
                                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                     </svg>
-                                    Download File Kompres
+                                    Download File Kompres ({formatBytes(result.compressed_size)})
                                 </a>
+                                
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                    💡 File .bin dapat didekompresi kembali menggunakan halaman Dekompresi
+                                </p>
                             </motion.div>
 
                             {/* Image Preview */}
@@ -633,22 +561,32 @@ export default function Index() {
                                 />
                             </motion.div>
 
-                            {/* Huffman Tree */}
+                            {/* Compression Info Card */}
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.5 }}
-                                className="mb-8"
+                                className="mb-8 bg-white/80 dark:bg-gray-800/80 rounded-lg p-6 border border-gray-200 dark:border-gray-700"
                             >
-                                <HuffmanTreeVisualization tree={result.huffman_tree} />
-                            </motion.div>
-
-                            {/* Huffman Code Table */}
-                            <motion.div
-                                variants={cardVariants}
-                                whileHover={{ scale: 1.01, y: -2 }}
-                            >
-                                <HuffmanCodeTable codes={result.huffman_codes} />
+                                <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-4">📊 Detail Kompresi</h4>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                    <div className="text-center p-3 bg-teal-50 dark:bg-teal-900/20 rounded-lg">
+                                        <div className="text-2xl font-bold text-teal-600">{result.quality_level || 75}</div>
+                                        <div className="text-gray-600 dark:text-gray-400">Quality Level</div>
+                                    </div>
+                                    <div className="text-center p-3 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg">
+                                        <div className="text-2xl font-bold text-cyan-600">{result.width}x{result.height}</div>
+                                        <div className="text-gray-600 dark:text-gray-400">Dimensi</div>
+                                    </div>
+                                    <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                                        <div className="text-2xl font-bold text-green-600">{result.compression_ratio.toFixed(1)}%</div>
+                                        <div className="text-gray-600 dark:text-gray-400">Rasio Kompresi</div>
+                                    </div>
+                                    <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                                        <div className="text-2xl font-bold text-purple-600">{result.bits_per_pixel.toFixed(2)}</div>
+                                        <div className="text-gray-600 dark:text-gray-400">Bits/Pixel</div>
+                                    </div>
+                                </div>
                             </motion.div>
                         </motion.div>
                     )}

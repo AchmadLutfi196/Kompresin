@@ -77,10 +77,26 @@ class HuffmanCompressionService
         // Apply simple grayscale conversion first to reduce data
         $grayscaleData = $this->convertToGrayscale($pixelData, $imageData['width'], $imageData['height']);
         
+        // Validate grayscale data before compression
+        if (empty($grayscaleData)) {
+            throw new \Exception("Grayscale conversion failed - no data to compress");
+        }
+        
         // Use highest compression level with gzcompress
         $startTime = microtime(true);
         $compressedData = gzcompress($grayscaleData, 9);
         $compressionTime = microtime(true) - $startTime;
+        
+        // Verify compression was successful
+        if ($compressedData === false) {
+            throw new \Exception("Compression failed using DEFLATE algorithm");
+        }
+        
+        // Test decompression to ensure data integrity
+        $testDecompression = gzuncompress($compressedData);
+        if ($testDecompression === false || $testDecompression !== $grayscaleData) {
+            throw new \Exception("Compression integrity check failed");
+        }
         
         // Calculate statistics
         $originalSize = strlen($grayscaleData); // Use grayscale size as baseline
@@ -704,7 +720,7 @@ class HuffmanCompressionService
     /**
      * Save compressed data with user-selected format
      */
-    public function saveCompressedFile($encodedData, $metadata, $format = 'txt')
+    public function saveCompressedFile($encodedData, $metadata, $format = 'bin')
     {
         $filename = 'compressed_' . time();
         $path = 'public/compressed/';
@@ -712,12 +728,6 @@ class HuffmanCompressionService
         Storage::makeDirectory('public/compressed');
         
         switch (strtolower($format)) {
-            case 'json':
-                return $this->saveAsJson($encodedData, $metadata, $filename, $path);
-            
-            case 'zip':
-                return $this->saveAsZip($encodedData, $metadata, $filename, $path);
-            
             case 'jpg':
             case 'jpeg':
                 return $this->saveAsJpeg($encodedData, $metadata, $filename, $path);
@@ -734,73 +744,90 @@ class HuffmanCompressionService
      */
     private function saveAsJpeg($encodedData, $metadata, $filename, $path)
     {
-        // For JPG format, we'll reload the original image and compress as JPEG
-        // This approach maintains original colors while still providing compression
-        
-        if (isset($metadata['original_image_path'])) {
-            // Load the original image to preserve colors
-            $originalImageData = $this->loadImage($metadata['original_image_path']);
-            
-            if ($originalImageData) {
-                // Create output filename
-                $filename .= '.jpg';
-                $fullPath = 'compressed/' . $filename;
-                $diskPath = Storage::disk('public')->path($fullPath);
-                
-                // Ensure directory exists
-                $dir = dirname($diskPath);
-                if (!is_dir($dir)) {
-                    mkdir($dir, 0755, true);
-                }
-                
-                // Save as JPEG with medium compression for good balance of size/quality
-                imagejpeg($originalImageData['resource'], $diskPath, 75);
-                imagedestroy($originalImageData['resource']);
-                
-                $fileSize = filesize($diskPath);
-                
-                return [
-                    'path' => 'public/' . $fullPath,
-                    'url' => '/storage/' . $fullPath,
-                    'filename' => $filename,
-                    'size' => $fileSize,
-                    'format' => 'jpg',
-                ];
-            }
+        // Validate input data
+        if (empty($encodedData)) {
+            throw new \Exception("Encoded data is empty for JPG output");
         }
         
-        // Fallback: decompress grayscale data (if original image not available)
-        $decompressedData = gzuncompress($encodedData);
-        $image = imagecreatetruecolor($metadata['width'], $metadata['height']);
+        if (!isset($metadata['width'], $metadata['height']) || $metadata['width'] <= 0 || $metadata['height'] <= 0) {
+            throw new \Exception("Invalid image dimensions for JPG output");
+        }
         
+        // Decompress grayscale data
+        $decompressedData = gzuncompress($encodedData);
+        if ($decompressedData === false) {
+            throw new \Exception("Failed to decompress data for JPG output - invalid DEFLATE data");
+        }
+        
+        // Validate decompressed data size
+        $expectedSize = $metadata['width'] * $metadata['height'];
+        $actualSize = strlen($decompressedData);
+        
+        if ($actualSize !== $expectedSize) {
+            throw new \Exception("Decompressed data size mismatch. Expected: {$expectedSize} bytes, Got: {$actualSize} bytes");
+        }
+        
+        // Create new image from decompressed grayscale data
+        $image = imagecreatetruecolor($metadata['width'], $metadata['height']);
+        if ($image === false) {
+            throw new \Exception("Failed to create image resource");
+        }
+        
+        // Enable alpha blending for better image quality
+        imagealphablending($image, false);
+        imagesavealpha($image, true);
+        
+        // Fill image with decompressed pixel data
         $pixelIndex = 0;
         for ($y = 0; $y < $metadata['height']; $y++) {
             for ($x = 0; $x < $metadata['width']; $x++) {
                 if ($pixelIndex < strlen($decompressedData)) {
                     $gray = ord($decompressedData[$pixelIndex]);
+                    // Ensure gray value is within valid range
+                    $gray = max(0, min(255, $gray));
                     $color = imagecolorallocate($image, $gray, $gray, $gray);
-                    imagesetpixel($image, $x, $y, $color);
+                    if ($color !== false) {
+                        imagesetpixel($image, $x, $y, $color);
+                    } else {
+                        // Fallback to direct pixel setting
+                        $colorIndex = ($gray << 16) | ($gray << 8) | $gray;
+                        imagesetpixel($image, $x, $y, $colorIndex);
+                    }
                     $pixelIndex++;
+                } else {
+                    // This should not happen with proper validation above
+                    $black = imagecolorallocate($image, 0, 0, 0);
+                    imagesetpixel($image, $x, $y, $black);
                 }
             }
         }
         
-        // Save as JPEG
+        // Create output filename and path
         $filename .= '.jpg';
         $fullPath = 'compressed/' . $filename;
-        $diskPath = Storage::disk('public')->path($fullPath);
         
         // Ensure directory exists
-        $dir = dirname($diskPath);
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
+        Storage::disk('public')->makeDirectory('compressed');
+        $diskPath = Storage::disk('public')->path($fullPath);
         
-        // Save JPEG with 85% quality
-        imagejpeg($image, $diskPath, 85);
+        // Save as JPEG with good quality
+        $success = imagejpeg($image, $diskPath, 90);
         imagedestroy($image);
         
+        if (!$success) {
+            throw new \Exception("Failed to save JPG file: {$diskPath}");
+        }
+        
+        // Verify file was created and has reasonable size
+        if (!file_exists($diskPath)) {
+            throw new \Exception("JPG file was not created: {$diskPath}");
+        }
+        
         $fileSize = filesize($diskPath);
+        if ($fileSize === false || $fileSize < 100) {
+            unlink($diskPath);
+            throw new \Exception("JPG file appears corrupted or too small: {$fileSize} bytes");
+        }
         
         return [
             'path' => 'public/' . $fullPath,
@@ -889,26 +916,87 @@ class HuffmanCompressionService
      */
     private function saveAsBinary($encodedData, $metadata, $filename, $path)
     {
+        // Validate input data
+        if (empty($encodedData)) {
+            throw new \Exception("Encoded data is empty");
+        }
+        
+        if (!isset($metadata['width'], $metadata['height'])) {
+            throw new \Exception("Invalid metadata: missing width or height");
+        }
+        
         $filename .= '.bin';
         $fullPath = 'compressed/' . $filename;
         
-        // Minimal 12-byte header: width(4) + height(4) + data_length(4)
-        $header = pack('VVV', 
+        // Ensure directory exists first
+        Storage::disk('public')->makeDirectory('compressed');
+        
+        // Create comprehensive header with magic number for validation
+        // Header format: magic(8) + version(4) + width(4) + height(4) + data_length(4) + algorithm(4) + checksum(4) + reserved(4)
+        $magic = 'KOMPRSN2'; // Updated version
+        $version = 2;
+        $algorithm = 1; // 1 = DEFLATE
+        $dataLength = strlen($encodedData);
+        $checksum = crc32($encodedData); // Add checksum for data integrity
+        $reserved = 0;
+        
+        // Pack header with proper byte order
+        $header = $magic . pack('V*', 
+            $version,
             $metadata['width'],
             $metadata['height'],
-            strlen($encodedData)
+            $dataLength,
+            $algorithm,
+            $checksum,
+            $reserved
         );
         
-        // Raw compressed data (no base64 encoding)
+        // Combine header and data
         $binaryData = $header . $encodedData;
-        Storage::disk('public')->put($fullPath, $binaryData);
+        
+        // Use file_put_contents with proper flags for binary data
+        $diskPath = Storage::disk('public')->path($fullPath);
+        $dir = dirname($diskPath);
+        
+        if (!is_dir($dir)) {
+            if (!mkdir($dir, 0755, true)) {
+                throw new \Exception("Failed to create directory: {$dir}");
+            }
+        }
+        
+        // Write binary data with exclusive lock
+        $bytesWritten = file_put_contents($diskPath, $binaryData, LOCK_EX | FILE_BINARY);
+        
+        if ($bytesWritten === false) {
+            throw new \Exception("Failed to write binary file: {$diskPath}");
+        }
+        
+        // Verify file integrity
+        $actualSize = filesize($diskPath);
+        $expectedSize = strlen($binaryData);
+        
+        if ($actualSize !== $expectedSize) {
+            // Clean up corrupted file
+            unlink($diskPath);
+            throw new \Exception("File size mismatch. Expected: {$expectedSize} bytes, Got: {$actualSize} bytes");
+        }
+        
+        // Additional verification - read back and verify
+        $verifyData = file_get_contents($diskPath);
+        if ($verifyData !== $binaryData) {
+            unlink($diskPath);
+            throw new \Exception("File verification failed - data corruption detected");
+        }
         
         return [
             'path' => 'public/' . $fullPath,
             'url' => '/storage/' . $fullPath,
             'filename' => $filename,
-            'size' => strlen($binaryData),
+            'size' => $actualSize,
             'format' => 'bin',
+            'header_size' => strlen($header),
+            'data_size' => $dataLength,
+            'checksum' => sprintf('%08x', $checksum),
         ];
     }
 
@@ -983,7 +1071,11 @@ class HuffmanCompressionService
                 $metadataJson = $zip->getFromName('metadata.json');
                 if ($metadataJson !== false) {
                     $metadata = json_decode($metadataJson, true);
-                    $encodedData = $zip->getFromName('compressed.dat');
+                    // Try both 'data.bin' (new format) and 'compressed.dat' (old format)
+                    $encodedData = $zip->getFromName('data.bin');
+                    if ($encodedData === false) {
+                        $encodedData = $zip->getFromName('compressed.dat');
+                    }
                     $zip->close();
                     
                     if ($encodedData !== false) {
@@ -1039,7 +1131,68 @@ class HuffmanCompressionService
             }
         }
         
-        // Try new binary format (12-byte header)
+        // Try new binary format with magic number and checksum (36-byte header)
+        if (strlen($content) > 36) {
+            $magic = substr($content, 0, 8);
+            if ($magic === 'KOMPRSN2') {
+                $headerData = unpack('Vversion/Vwidth/Vheight/Vlength/Valgorithm/Vchecksum/Vreserved', substr($content, 8, 28));
+                
+                if ($headerData && $headerData['length'] == strlen($content) - 36) {
+                    $encodedData = substr($content, 36);
+                    
+                    // Verify data integrity using checksum
+                    $calculatedChecksum = crc32($encodedData);
+                    if ($calculatedChecksum !== $headerData['checksum']) {
+                        throw new \Exception("File corruption detected. Checksum mismatch.");
+                    }
+                    
+                    $algorithmMap = [1 => 'DEFLATE'];
+                    $algorithm = $algorithmMap[$headerData['algorithm']] ?? 'Unknown';
+                    
+                    return [
+                        'metadata' => [
+                            'width' => $headerData['width'],
+                            'height' => $headerData['height'],
+                            'type' => 'unknown',
+                            'algorithm' => $algorithm,
+                            'huffman_tree' => null,
+                            'version' => $headerData['version'],
+                            'checksum' => sprintf('%08x', $headerData['checksum']),
+                        ],
+                        'encoded_data' => $encodedData,
+                    ];
+                }
+            }
+        }
+        
+        // Try old binary format with magic number (32-byte header) - backward compatibility
+        if (strlen($content) > 32) {
+            $magic = substr($content, 0, 8);
+            if ($magic === 'KOMPRSN1') {
+                $headerData = unpack('Vversion/Vwidth/Vheight/Vlength/Valgorithm/Vreserved', substr($content, 8, 24));
+                
+                if ($headerData && $headerData['length'] == strlen($content) - 32) {
+                    $encodedData = substr($content, 32);
+                    
+                    $algorithmMap = [1 => 'DEFLATE'];
+                    $algorithm = $algorithmMap[$headerData['algorithm']] ?? 'Unknown';
+                    
+                    return [
+                        'metadata' => [
+                            'width' => $headerData['width'],
+                            'height' => $headerData['height'],
+                            'type' => 'unknown',
+                            'algorithm' => $algorithm,
+                            'huffman_tree' => null,
+                            'version' => $headerData['version'],
+                        ],
+                        'encoded_data' => $encodedData,
+                    ];
+                }
+            }
+        }
+        
+        // Try old binary format (12-byte header) for backward compatibility
         if (strlen($content) > 12) {
             $header = unpack('Vwidth/Vheight/Vlength', substr($content, 0, 12));
             if ($header && $header['length'] == strlen($content) - 12) {

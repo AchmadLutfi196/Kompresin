@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CompressionHistory;
-use App\Services\HuffmanCompressionService;
+use App\Services\ImageCompressionService;
 use App\Services\FileEncryptionService;
 use App\Traits\HandlesDiskPaths;
 use Illuminate\Http\Request;
@@ -16,12 +16,12 @@ class CompressionController extends Controller
 {
     use HandlesDiskPaths;
     
-    protected $huffmanService;
+    protected $compressionService;
     protected $encryptionService;
 
-    public function __construct(HuffmanCompressionService $huffmanService, FileEncryptionService $encryptionService)
+    public function __construct(ImageCompressionService $compressionService, FileEncryptionService $encryptionService)
     {
-        $this->huffmanService = $huffmanService;
+        $this->compressionService = $compressionService;
         $this->encryptionService = $encryptionService;
     }
 
@@ -73,8 +73,9 @@ class CompressionController extends Controller
         ]);
 
         $request->validate([
-            'image' => 'required|image|mimes:jpeg,jpg,png,bmp|max:20480', // max 20MB
-            'format' => 'nullable|string|in:json,zip,bin,jpg', // format pilihan user (txt removed, jpg added)
+            'image' => 'required|image|mimes:jpeg,jpg,png,bmp,gif,webp|max:20480', // max 20MB
+            'format' => 'nullable|string|in:bin,jpg', // format pilihan user
+            'quality' => 'nullable|integer|min:1|max:100', // JPEG quality
         ]);
 
         try {
@@ -121,9 +122,12 @@ class CompressionController extends Controller
             // Get ACTUAL file size of uploaded JPG/PNG
             $originalFileSize = filesize($fullPath);
 
-            // Compress image
+            // Get quality setting (default 60 for balanced compression)
+            $quality = $request->input('quality', 60);
+
+            // Compress image using JPEG Quality Reduction
             try {
-                $compressionResult = $this->huffmanService->compress($fullPath);
+                $compressionResult = $this->compressionService->compress($fullPath, $quality);
             } catch (\Exception $e) {
                 Log::error('Compression service error', [
                     'message' => $e->getMessage(),
@@ -135,53 +139,36 @@ class CompressionController extends Controller
             }
 
             // Save compressed file
-            $format = $request->input('format', 'bin'); // Default to bin (most efficient)
-            $compressedFile = $this->huffmanService->saveCompressedFile(
+            $format = $request->input('format', 'jpg'); // Default to jpg now
+            $compressedFile = $this->compressionService->saveCompressedFile(
                 $compressionResult['encoded_data'],
                 [
-                    'huffman_tree' => $compressionResult['huffman_tree'] ?? null,
-                    'huffman_codes' => $compressionResult['huffman_codes'] ?? [],
                     'width' => $compressionResult['width'],
                     'height' => $compressionResult['height'],
                     'type' => $compressionResult['type'],
-                    'algorithm' => $compressionResult['algorithm'] ?? 'DEFLATE',
-                    'original_image_path' => $fullPath, // Add original image path for JPG format
+                    'quality' => $quality,
+                    'algorithm' => $compressionResult['algorithm'],
                 ],
-                $format // Pass format parameter
+                $format
             );
-            
-            // Encrypt the compressed file for user privacy (only for authenticated users)
-            if (Auth::id()) {
-                $this->encryptionService->encryptFile($compressedFile['path'], Auth::id());
-            }
-
-            // Get Huffman codes for visualization
-            $huffmanCodesVisualization = $this->huffmanService->getHuffmanCodesForVisualization();
 
             // Calculate compression metrics
-            // Compare with actual file size (JPG/PNG original file)
-            $pixelDataSize = $compressionResult['original_size']; // Grayscale pixel data
-            $binaryFileSize = $compressedFile['size']; // .bin file with header
-            
-            // Compression ratio based on pixel data (theoretical)
-            $pixelCompressionRatio = (1 - ($binaryFileSize / $pixelDataSize)) * 100;
-            
-            // Real file comparison (JPG/PNG → .bin)
-            $fileCompressionRatio = (1 - ($binaryFileSize / $originalFileSize)) * 100;
+            $compressedSize = $compressedFile['size'];
+            $compressionRatio = (1 - ($compressedSize / $originalFileSize)) * 100;
 
             // Save to history
             $history = CompressionHistory::create([
-                'user_id' => Auth::id(), // null for guest users
+                'user_id' => Auth::id(),
                 'type' => 'compress',
                 'filename' => $originalFilename,
                 'original_path' => $originalPath,
                 'compressed_path' => $compressedFile['path'],
-                'original_size' => $pixelDataSize, // Pixel data size for algorithm analysis
-                'compressed_size' => $binaryFileSize,
-                'compression_ratio' => $pixelCompressionRatio, // Theoretical compression
+                'original_size' => $originalFileSize,
+                'compressed_size' => $compressedSize,
+                'compression_ratio' => $compressionRatio,
                 'bits_per_pixel' => $compressionResult['bits_per_pixel'],
-                'entropy' => $compressionResult['entropy'],
-                'huffman_table' => $compressionResult['huffman_codes'],
+                'entropy' => $quality, // Store quality instead of entropy
+                'huffman_table' => [], // Not used in JPEG compression
                 'image_width' => $compressionResult['width'],
                 'image_height' => $compressionResult['height'],
             ]);
@@ -190,22 +177,24 @@ class CompressionController extends Controller
                 'success' => true,
                 'message' => 'Image compressed successfully',
                 'data' => [
-                    'original_size' => $pixelDataSize,
-                    'compressed_size' => $binaryFileSize,
-                    'compression_ratio' => round($pixelCompressionRatio, 2),
-                    'original_file_size' => $originalFileSize, // Actual JPG/PNG file size
-                    'file_compression_ratio' => round($fileCompressionRatio, 2), // Real file comparison
+                    'original_size' => $originalFileSize,
+                    'compressed_size' => $compressedSize,
+                    'compression_ratio' => round($compressionRatio, 2),
+                    'original_file_size' => $originalFileSize,
+                    'file_compression_ratio' => round($compressionRatio, 2),
                     'bits_per_pixel' => round($compressionResult['bits_per_pixel'], 4),
-                    'entropy' => round($compressionResult['entropy'], 4),
+                    'entropy' => round($compressionResult['bits_per_pixel'], 4), // Use bits_per_pixel as entropy equivalent
+                    'quality' => $quality,
+                    'quality_level' => $quality, // Send numeric quality for frontend
+                    'estimated_visual_quality' => $compressionResult['estimated_visual_quality'],
                     'width' => $compressionResult['width'],
                     'height' => $compressionResult['height'],
-                    'compressed_file_url' => route('secure.compressed', $history->id),
+                    'compressed_file_url' => route('download.compressed', $history->id),
                     'compressed_filename' => $compressedFile['filename'],
-                    'algorithm' => $compressionResult['algorithm'] ?? 'DEFLATE (LZ77 + Huffman)',
-                    'compression_time' => round($compressionResult['compression_time'] ?? 0, 3),
+                    'algorithm' => $compressionResult['algorithm'],
+                    'compression_time' => round($compressionResult['compression_time'], 3),
                     'original_image_url' => route('secure.original', $history->id),
-                    'huffman_tree' => $compressionResult['huffman_tree'],
-                    'huffman_codes' => $huffmanCodesVisualization,
+                    'description' => $compressionResult['description'],
                     'history_id' => $history->id,
                 ],
             ]);
@@ -244,11 +233,6 @@ class CompressionController extends Controller
             $filename = $file->getClientOriginalName();
             $path = $file->storeAs('public/compressed', time() . '_' . $filename);
 
-            // Encrypt the uploaded compressed file for user privacy (only for authenticated users)
-            if (Auth::id()) {
-                $this->encryptionService->encryptFile($path, Auth::id());
-            }
-
             // Load compressed data (decrypt if needed)
             $compressedData = $this->loadCompressedFileSecurely($path, Auth::id() ?? 0);
 
@@ -259,20 +243,13 @@ class CompressionController extends Controller
             $metadata = $compressedData['metadata'];
             $encodedData = $compressedData['encoded_data'];
 
-            // Decompress
-            $decompressedImage = $this->huffmanService->decompress(
+            // Decompress using new service
+            $decompressedImage = $this->compressionService->decompress(
                 $encodedData,
-                $metadata['huffman_tree'],
                 $metadata['width'],
                 $metadata['height'],
-                $metadata['type'],
-                $metadata['algorithm'] ?? 'DEFLATE'
+                'jpg' // Output as JPG
             );
-            
-            // Encrypt the decompressed image for user privacy (only for authenticated users)
-            if (Auth::id()) {
-                $this->encryptionService->encryptFile($decompressedImage['path'], Auth::id());
-            }
 
             // Calculate file sizes
             // For compressed file, try public disk first
@@ -442,6 +419,36 @@ class CompressionController extends Controller
     }
 
     /**
+     * Download compressed file - public route (no auth required)
+     * Uses history ID for security but allows unauthenticated download
+     */
+    public function downloadCompressedFile($id)
+    {
+        $history = CompressionHistory::findOrFail($id);
+        
+        // Get full path
+        $fullPath = $this->getFullPathOnCorrectDisk($history->compressed_path);
+        
+        if (!file_exists($fullPath)) {
+            abort(404, 'File not found');
+        }
+        
+        $fileSize = filesize($fullPath);
+        $filename = pathinfo($history->compressed_path, PATHINFO_BASENAME);
+        $mimeType = mime_content_type($fullPath);
+        
+        // Return file with proper headers for download
+        return response()->file($fullPath, [
+            'Content-Type' => $mimeType,
+            'Content-Length' => $fileSize,
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+        ]);
+    }
+
+    /**
      * Serve compressed file securely
      */
     public function serveCompressedFile($id)
@@ -458,27 +465,35 @@ class CompressionController extends Controller
             return $this->encryptionService->getFileInfoForAdmin($history->compressed_path);
         }
         
-        // Check if file is encrypted
-        if ($this->encryptionService->isEncrypted($history->compressed_path)) {
-            $tempFile = $this->encryptionService->decryptFileForServing($history->compressed_path, $history->user_id);
-            
-            if (!$tempFile) {
-                abort(404, 'File not found or decryption failed');
-            }
-            
-            $filename = pathinfo($history->compressed_path, PATHINFO_BASENAME);
-            return response()->file($tempFile, [
-                'Content-Disposition' => 'attachment; filename="' . $filename . '"'
-            ])->deleteFileAfterSend(true);
-        }
-        
-        // Legacy: serve unencrypted file directly
+        // Get full path - file is never encrypted for compressed files
         $fullPath = $this->getFullPathOnCorrectDisk($history->compressed_path);
+        
+        Log::info('Serving compressed file', [
+            'history_id' => $id,
+            'compressed_path' => $history->compressed_path,
+            'full_path' => $fullPath,
+            'exists' => file_exists($fullPath),
+            'size' => file_exists($fullPath) ? filesize($fullPath) : 0,
+        ]);
+        
         if (!file_exists($fullPath)) {
+            Log::error('Compressed file not found', ['path' => $fullPath]);
             abort(404, 'File not found');
         }
         
-        return response()->file($fullPath);
+        $fileSize = filesize($fullPath);
+        $filename = pathinfo($history->compressed_path, PATHINFO_BASENAME);
+        $mimeType = mime_content_type($fullPath);
+        
+        // Return file with proper headers for download
+        return response()->file($fullPath, [
+            'Content-Type' => $mimeType,
+            'Content-Length' => $fileSize,
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+        ]);
     }
 
     /**
@@ -531,12 +546,12 @@ class CompressionController extends Controller
             // Decrypt file temporarily
             $decryptedData = $this->encryptionService->decryptFile($path, $userId);
             
-            // Create temporary file for HuffmanService to read
+            // Create temporary file for compressionService to read
             $tempPath = 'temp/compressed_' . time() . '_' . \Illuminate\Support\Str::random(10);
             Storage::put($tempPath, $decryptedData['content']);
             
-            // Load using HuffmanService
-            $compressedData = $this->huffmanService->loadCompressedFile($tempPath);
+            // Load using compressionService
+            $compressedData = $this->compressionService->loadCompressedFile($tempPath);
             
             // Clean up temp file
             Storage::delete($tempPath);
@@ -544,7 +559,7 @@ class CompressionController extends Controller
             return $compressedData;
         } else {
             // Legacy: load unencrypted file directly
-            return $this->huffmanService->loadCompressedFile($path);
+            return $this->compressionService->loadCompressedFile($path);
         }
     }
 }

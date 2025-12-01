@@ -5,7 +5,7 @@ import AppHeader from '@/components/AppHeader';
 
 export default function Home() {
     const [displayText, setDisplayText] = useState('');
-    const finalText = 'Kompresi Citra dengan Huffman Code';
+    const finalText = 'Kompresi Citra dengan JPEG Quality';
     
     useEffect(() => {
         let iteration = 0;
@@ -77,7 +77,7 @@ export default function Home() {
 
     return (
         <>
-            <Head title="Kompresi Citra - Huffman Coding" />
+            <Head title="Kompresi Citra - JPEG Quality Reduction" />
             
             <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-gray-900 dark:to-gray-800">
                 <AppHeader currentPage="home" />
@@ -123,7 +123,7 @@ export default function Home() {
                             }}
                         >
                             Aplikasi web untuk mengompresi dan mendekompresi gambar menggunakan 
-                            algoritma Huffman Coding dengan visualisasi lengkap dan analisis efisiensi.
+                            metode JPEG Quality Reduction dengan visualisasi lengkap dan analisis efisiensi.
                         </motion.p>
                     </motion.div>
 
@@ -192,8 +192,8 @@ export default function Home() {
                                 Kompresi Gambar
                             </h3>
                             <p className="text-gray-600 dark:text-gray-300 mb-4">
-                                Upload gambar (JPG, PNG, BMP) dan kompres menggunakan algoritma Huffman Code. 
-                                Dapatkan visualisasi pohon Huffman dan statistik kompresi lengkap.
+                                Upload gambar (JPG, PNG, BMP) dan kompres menggunakan metode JPEG Quality Reduction. 
+                                Dapatkan statistik kompresi lengkap dan perbandingan kualitas.
                             </p>
                             <motion.div whileHover={{ x: 5 }} whileTap={{ scale: 0.95 }}>
                                 <Link
@@ -331,13 +331,12 @@ export default function Home() {
                                     className="text-lg font-semibold text-gray-900 dark:text-white mb-2"
                                     whileHover={{ color: "#0891b2" }}
                                 >
-                                    Huffman Coding
+                                    JPEG Quality Reduction
                                 </motion.h4>
                                 <p className="text-gray-600 dark:text-gray-300">
-                                    Algoritma Huffman adalah metode kompresi lossless yang menggunakan kode dengan 
-                                    panjang variabel. Simbol yang sering muncul diberi kode pendek, sedangkan simbol 
-                                    yang jarang diberi kode lebih panjang. Algoritma ini membangun pohon biner optimal 
-                                    berdasarkan frekuensi kemunculan setiap simbol.
+                                    JPEG Quality Reduction adalah metode kompresi lossy yang mengurangi kualitas gambar 
+                                    untuk menghasilkan ukuran file yang lebih kecil. Parameter kualitas (10-100) mengontrol 
+                                    tingkat kompresi: nilai rendah = ukuran kecil, nilai tinggi = kualitas tinggi.
                                 </p>
                             </motion.div>
 
@@ -355,9 +354,9 @@ export default function Home() {
                                     Dekompresi
                                 </motion.h4>
                                 <p className="text-gray-600 dark:text-gray-300">
-                                    Dekompresi adalah proses mengembalikan data yang telah dikompres ke bentuk aslinya. 
-                                    Dengan menggunakan tabel atau pohon Huffman yang sama, kita dapat mendekode urutan 
-                                    bit menjadi simbol-simbol asli dengan sempurna.
+                                    Dekompresi adalah proses mengembalikan data yang telah dikompres ke format gambar 
+                                    yang dapat ditampilkan. File BIN yang terkompresi dapat dipulihkan menjadi 
+                                    gambar JPG yang siap digunakan.
                                 </p>
                             </motion.div>
 
@@ -462,7 +461,7 @@ export default function Home() {
                                     whileHover={{ scale: 1.3, rotate: 360, transition: { duration: 0.5 } }}>
                                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                 </motion.svg>
-                                <span>Visualisasi pohon Huffman</span>
+                                <span>Visualisasi perbandingan kualitas</span>
                             </motion.div>
                             <motion.div 
                                 className="flex items-start"
@@ -473,7 +472,7 @@ export default function Home() {
                                     whileHover={{ scale: 1.3, rotate: 360, transition: { duration: 0.5 } }}>
                                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                 </motion.svg>
-                                <span>Tabel kode Huffman</span>
+                                <span>Statistik kompresi detail</span>
                             </motion.div>
                             <motion.div 
                                 className="flex items-start"
@@ -528,7 +527,7 @@ export default function Home() {
                                 transition: { duration: 0.2 }
                             }}
                         >
-                            © 2025 Kompresi Citra. Aplikasi demonstrasi algoritma Huffman Coding.
+                            © 2025 Kompresi Citra. Aplikasi demonstrasi JPEG Quality Reduction.
                         </motion.p>
                     </div>
                 </motion.footer>

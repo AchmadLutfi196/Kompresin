@@ -22,7 +22,10 @@ Route::post('/decompress', [CompressionController::class, 'decompress'])->name('
 Route::get('/history', [CompressionController::class, 'history'])->name('history');
 Route::delete('/history/{id}', [CompressionController::class, 'deleteHistory'])->name('history.delete');
 
-// Secure file serving routes
+// Public download route for compressed files (no auth required)
+Route::get('/download/compressed/{id}', [CompressionController::class, 'downloadCompressedFile'])->name('download.compressed');
+
+// Secure file serving routes (requires auth)
 Route::middleware(['auth'])->group(function () {
     Route::get('/secure/original/{id}', [CompressionController::class, 'serveOriginalFile'])->name('secure.original');
     Route::get('/secure/compressed/{id}', [CompressionController::class, 'serveCompressedFile'])->name('secure.compressed');

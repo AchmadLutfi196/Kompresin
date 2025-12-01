@@ -30,7 +30,7 @@ class CompressionAnalyzer
         
         // 3. Test format output
         $this->testOutputFormats();
-        
+        ''
         // 4. Test cycle time (kompresi + dekompresi)
         $this->testCycleTime();
         
