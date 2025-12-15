@@ -561,33 +561,6 @@ export default function Index() {
                                 />
                             </motion.div>
 
-                            {/* Compression Info Card */}
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.5 }}
-                                className="mb-8 bg-white/80 dark:bg-gray-800/80 rounded-lg p-6 border border-gray-200 dark:border-gray-700"
-                            >
-                                <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-4">📊 Detail Kompresi</h4>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                                    <div className="text-center p-3 bg-teal-50 dark:bg-teal-900/20 rounded-lg">
-                                        <div className="text-2xl font-bold text-teal-600">{result.quality_level || 75}</div>
-                                        <div className="text-gray-600 dark:text-gray-400">Quality Level</div>
-                                    </div>
-                                    <div className="text-center p-3 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg">
-                                        <div className="text-2xl font-bold text-cyan-600">{result.width}x{result.height}</div>
-                                        <div className="text-gray-600 dark:text-gray-400">Dimensi</div>
-                                    </div>
-                                    <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                                        <div className="text-2xl font-bold text-green-600">{result.compression_ratio.toFixed(1)}%</div>
-                                        <div className="text-gray-600 dark:text-gray-400">Rasio Kompresi</div>
-                                    </div>
-                                    <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                                        <div className="text-2xl font-bold text-purple-600">{result.bits_per_pixel.toFixed(2)}</div>
-                                        <div className="text-gray-600 dark:text-gray-400">Bits/Pixel</div>
-                                    </div>
-                                </div>
-                            </motion.div>
                         </motion.div>
                     )}
                 </motion.div>

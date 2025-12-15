@@ -1,0 +1,371 @@
+{
+    "test_date": "2025-12-15 13:08:02",
+    "quality": 60,
+    "categories": [
+        {
+            "name": "Logo",
+            "folder": "logo",
+            "files": [
+                {
+                    "filename": "logo 1.png",
+                    "original_size": 1644234,
+                    "compressed_size": 141817,
+                    "width": 2048,
+                    "height": 2048,
+                    "ratio": 91.3748894622055,
+                    "bpp": 0.2704944610595703,
+                    "time": 14.513969421386719,
+                    "status": "Berkurang"
+                },
+                {
+                    "filename": "logo 2.png",
+                    "original_size": 659840,
+                    "compressed_size": 58019,
+                    "width": 762,
+                    "height": 768,
+                    "ratio": 91.20711081474296,
+                    "bpp": 0.7931293744531933,
+                    "time": 3.1850337982177734,
+                    "status": "Berkurang"
+                },
+                {
+                    "filename": "logo 3.png",
+                    "original_size": 458114,
+                    "compressed_size": 58286,
+                    "width": 640,
+                    "height": 640,
+                    "ratio": 87.2769659953636,
+                    "bpp": 1.1383984375,
+                    "time": 2.1619796752929688,
+                    "status": "Berkurang"
+                },
+                {
+                    "filename": "logo 4.png",
+                    "original_size": 450721,
+                    "compressed_size": 62684,
+                    "width": 1000,
+                    "height": 1000,
+                    "ratio": 86.09250511957508,
+                    "bpp": 0.501472,
+                    "time": 4.091978073120117,
+                    "status": "Berkurang"
+                },
+                {
+                    "filename": "logo 5.jpg",
+                    "original_size": 2908704,
+                    "compressed_size": 634020,
+                    "width": 4000,
+                    "height": 4000,
+                    "ratio": 78.20266345423941,
+                    "bpp": 0.31701,
+                    "time": 39.91293907165527,
+                    "status": "Berkurang"
+                },
+                {
+                    "filename": "logo 6.png",
+                    "original_size": 1728245,
+                    "compressed_size": 551368,
+                    "width": 3937,
+                    "height": 3532,
+                    "ratio": 68.09665296297689,
+                    "bpp": 0.31720895151869577,
+                    "time": 36.544084548950195,
+                    "status": "Berkurang"
+                }
+            ],
+            "total_original": 7849858,
+            "total_compressed": 1506194,
+            "success_count": 6,
+            "fail_count": 0,
+            "avg_ratio": 83.70846463485059,
+            "category_ratio": 80.8124682000617
+        },
+        {
+            "name": "Manusia",
+            "folder": "Manusia",
+            "files": [
+                {
+                    "filename": "Manusia 1.JPG",
+                    "original_size": 5307598,
+                    "compressed_size": 698707,
+                    "width": 6000,
+                    "height": 4000,
+                    "ratio": 86.83572116803118,
+                    "bpp": 0.23290233333333332,
+                    "time": 66.71285629272461,
+                    "status": "Berkurang"
+                },
+                {
+                    "filename": "Manusia 2.JPG",
+                    "original_size": 9078141,
+                    "compressed_size": 1438412,
+                    "width": 6000,
+                    "height": 4000,
+                    "ratio": 84.15521415673098,
+                    "bpp": 0.47947066666666666,
+                    "time": 68.50886344909668,
+                    "status": "Berkurang"
+                },
+                {
+                    "filename": "Manusia 3.JPG",
+                    "original_size": 7533591,
+                    "compressed_size": 1121489,
+                    "width": 6000,
+                    "height": 4000,
+                    "ratio": 85.1134870475448,
+                    "bpp": 0.37382966666666667,
+                    "time": 67.27218627929688,
+                    "status": "Berkurang"
+                },
+                {
+                    "filename": "Manusia 4.JPG",
+                    "original_size": 9398349,
+                    "compressed_size": 1470307,
+                    "width": 6000,
+                    "height": 4000,
+                    "ratio": 84.35568842995723,
+                    "bpp": 0.4901023333333333,
+                    "time": 66.50209426879883,
+                    "status": "Berkurang"
+                },
+                {
+                    "filename": "Manusia 5.JPG",
+                    "original_size": 8564365,
+                    "compressed_size": 1366139,
+                    "width": 6000,
+                    "height": 4000,
+                    "ratio": 84.04856635605792,
+                    "bpp": 0.4553796666666667,
+                    "time": 65.25087356567383,
+                    "status": "Berkurang"
+                }
+            ],
+            "total_original": 39882044,
+            "total_compressed": 6095054,
+            "success_count": 5,
+            "fail_count": 0,
+            "avg_ratio": 84.90173543166443,
+            "category_ratio": 84.7172978395992
+        },
+        {
+            "name": "Pemandangan Alam",
+            "folder": "Pemandangan_alam",
+            "files": [
+                {
+                    "filename": "Pemandangan 1.JPG",
+                    "original_size": 8130738,
+                    "compressed_size": 1292726,
+                    "width": 6000,
+                    "height": 4000,
+                    "ratio": 84.10075444566041,
+                    "bpp": 0.43090866666666666,
+                    "time": 67.63911247253418,
+                    "status": "Berkurang"
+                },
+                {
+                    "filename": "Pemandangan 2.JPG",
+                    "original_size": 7098719,
+                    "compressed_size": 1257793,
+                    "width": 6000,
+                    "height": 4000,
+                    "ratio": 82.28140880065826,
+                    "bpp": 0.41926433333333335,
+                    "time": 64.75496292114258,
+                    "status": "Berkurang"
+                },
+                {
+                    "filename": "Pemandangan 3.JPG",
+                    "original_size": 6553916,
+                    "compressed_size": 1156940,
+                    "width": 6000,
+                    "height": 4000,
+                    "ratio": 82.34734775361784,
+                    "bpp": 0.3856466666666667,
+                    "time": 65.05012512207031,
+                    "status": "Berkurang"
+                },
+                {
+                    "filename": "Pemandangan 4.JPG",
+                    "original_size": 6743931,
+                    "compressed_size": 1092677,
+                    "width": 6000,
+                    "height": 4000,
+                    "ratio": 83.7976248570752,
+                    "bpp": 0.36422566666666667,
+                    "time": 65.12618064880371,
+                    "status": "Berkurang"
+                },
+                {
+                    "filename": "Pemandangan 5.JPG",
+                    "original_size": 5990891,
+                    "compressed_size": 992453,
+                    "width": 6000,
+                    "height": 4000,
+                    "ratio": 83.43396666706171,
+                    "bpp": 0.3308176666666667,
+                    "time": 68.16792488098145,
+                    "status": "Berkurang"
+                },
+                {
+                    "filename": "Pemandangan 6.JPG",
+                    "original_size": 5776392,
+                    "compressed_size": 988246,
+                    "width": 6000,
+                    "height": 4000,
+                    "ratio": 82.8916389330918,
+                    "bpp": 0.32941533333333334,
+                    "time": 63.74502182006836,
+                    "status": "Berkurang"
+                },
+                {
+                    "filename": "Pemandangan 7.JPG",
+                    "original_size": 12736467,
+                    "compressed_size": 2837993,
+                    "width": 6000,
+                    "height": 4000,
+                    "ratio": 77.7175805503991,
+                    "bpp": 0.9459976666666666,
+                    "time": 74.60403442382812,
+                    "status": "Berkurang"
+                }
+            ],
+            "total_original": 53031054,
+            "total_compressed": 9618828,
+            "success_count": 7,
+            "fail_count": 0,
+            "avg_ratio": 82.36718885822349,
+            "category_ratio": 81.86189548486063
+        },
+        {
+            "name": "Warna Solid",
+            "folder": "Warna",
+            "files": [
+                {
+                    "filename": "abu-abu.jpg",
+                    "original_size": 4772886,
+                    "compressed_size": 570457,
+                    "width": 6000,
+                    "height": 6000,
+                    "ratio": 88.04796510957941,
+                    "bpp": 0.12676822222222223,
+                    "time": 79.48493957519531,
+                    "status": "Berkurang"
+                },
+                {
+                    "filename": "biru.jpg",
+                    "original_size": 4768729,
+                    "compressed_size": 570401,
+                    "width": 6000,
+                    "height": 6000,
+                    "ratio": 88.0387205899098,
+                    "bpp": 0.12675577777777777,
+                    "time": 84.03778076171875,
+                    "status": "Berkurang"
+                },
+                {
+                    "filename": "coklat.jpg",
+                    "original_size": 1584291,
+                    "compressed_size": 193095,
+                    "width": 3500,
+                    "height": 3500,
+                    "ratio": 87.81189819294562,
+                    "bpp": 0.12610285714285716,
+                    "time": 29.41107749938965,
+                    "status": "Berkurang"
+                },
+                {
+                    "filename": "hijau.jpg",
+                    "original_size": 12453510,
+                    "compressed_size": 456755,
+                    "width": 6016,
+                    "height": 4016,
+                    "ratio": 96.33231916142518,
+                    "bpp": 0.15124177492159024,
+                    "time": 57.528018951416016,
+                    "status": "Berkurang"
+                },
+                {
+                    "filename": "hitam.jpg",
+                    "original_size": 2210582,
+                    "compressed_size": 468781,
+                    "width": 6016,
+                    "height": 4016,
+                    "ratio": 78.79377467110471,
+                    "bpp": 0.15522385193269475,
+                    "time": 59.5090389251709,
+                    "status": "Berkurang"
+                },
+                {
+                    "filename": "kuning.jpg",
+                    "original_size": 1897172,
+                    "compressed_size": 376560,
+                    "width": 6000,
+                    "height": 4000,
+                    "ratio": 80.1515097207844,
+                    "bpp": 0.12552,
+                    "time": 53.89714241027832,
+                    "status": "Berkurang"
+                },
+                {
+                    "filename": "merah.jpg",
+                    "original_size": 11492566,
+                    "compressed_size": 409966,
+                    "width": 6000,
+                    "height": 4000,
+                    "ratio": 96.43277228079438,
+                    "bpp": 0.13665533333333332,
+                    "time": 60.04595756530762,
+                    "status": "Berkurang"
+                },
+                {
+                    "filename": "orange.jpg",
+                    "original_size": 2606776,
+                    "compressed_size": 378691,
+                    "width": 6000,
+                    "height": 4000,
+                    "ratio": 85.47282160032162,
+                    "bpp": 0.12623033333333333,
+                    "time": 57.15298652648926,
+                    "status": "Berkurang"
+                },
+                {
+                    "filename": "putih.jpg",
+                    "original_size": 3811603,
+                    "compressed_size": 563953,
+                    "width": 6000,
+                    "height": 4000,
+                    "ratio": 85.20430905317265,
+                    "bpp": 0.18798433333333334,
+                    "time": 59.61108207702637,
+                    "status": "Berkurang"
+                },
+                {
+                    "filename": "ungu.jpg",
+                    "original_size": 4783053,
+                    "compressed_size": 573075,
+                    "width": 6000,
+                    "height": 6000,
+                    "ratio": 88.01863579600729,
+                    "bpp": 0.12735,
+                    "time": 93.4610366821289,
+                    "status": "Berkurang"
+                }
+            ],
+            "total_original": 50381168,
+            "total_compressed": 4561734,
+            "success_count": 10,
+            "fail_count": 0,
+            "avg_ratio": 87.4304726176045,
+            "category_ratio": 90.94555727648077
+        }
+    ],
+    "summary": {
+        "total_files": 28,
+        "success_count": 28,
+        "fail_count": 0,
+        "total_original": 151144124,
+        "total_compressed": 21781810,
+        "total_savings": 129362314,
+        "overall_ratio": 85.58871531122176
+    }
+}
