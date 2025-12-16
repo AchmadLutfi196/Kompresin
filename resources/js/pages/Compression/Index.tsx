@@ -46,13 +46,13 @@ export default function Index() {
     };
 
     const cardVariants = {
-        hidden: { 
-            opacity: 0, 
+        hidden: {
+            opacity: 0,
             y: 30,
             scale: 0.95
         },
-        visible: { 
-            opacity: 1, 
+        visible: {
+            opacity: 1,
             y: 0,
             scale: 1
         }
@@ -126,7 +126,7 @@ export default function Index() {
             if (data.success) {
                 SweetAlert.close(); // Close loading
                 setResult(data.data);
-                
+
                 // Show success notification
                 SweetAlert.toast.success('Kompresi berhasil! File telah dikompres dengan JPEG Quality Reduction');
             } else {
@@ -150,11 +150,11 @@ export default function Index() {
     return (
         <>
             <Head title="Kompresi Gambar" />
-            
+
             <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-gray-900 dark:to-gray-800">
                 <AppHeader currentPage="compress" showBackButton />
 
-                <motion.div 
+                <motion.div
                     className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
                     variants={containerVariants}
                     initial="hidden"
@@ -172,7 +172,7 @@ export default function Index() {
                         </p>
                     </motion.div>
 
-                    
+
 
                     {/* Upload Form */}
                     <motion.div
@@ -186,7 +186,7 @@ export default function Index() {
                                     Pilih Gambar
                                 </label>
                                 <div className="flex items-center justify-center w-full">
-                                    <motion.label 
+                                    <motion.label
                                         className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800"
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
@@ -242,7 +242,7 @@ export default function Index() {
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                                     Pilih Format File Hasil Kompresi
                                 </label>
-                                <motion.div 
+                                <motion.div
                                     className="grid grid-cols-2 gap-4"
                                     variants={containerVariants}
                                     initial="hidden"
@@ -251,11 +251,10 @@ export default function Index() {
                                     <motion.button
                                         type="button"
                                         onClick={() => setSelectedFormat('jpg')}
-                                        className={`relative flex flex-col items-center p-6 rounded-lg border-2 transition-all ${
-                                            selectedFormat === 'jpg'
+                                        className={`relative flex flex-col items-center p-6 rounded-lg border-2 transition-all ${selectedFormat === 'jpg'
                                                 ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20 shadow-lg'
                                                 : 'border-gray-300 dark:border-gray-600 hover:border-teal-300'
-                                        }`}
+                                            }`}
                                         variants={cardVariants}
                                         whileHover={{ scale: 1.05, y: -2 }}
                                         whileTap={{ scale: 0.95 }}
@@ -278,11 +277,10 @@ export default function Index() {
                                     <motion.button
                                         type="button"
                                         onClick={() => setSelectedFormat('bin')}
-                                        className={`relative flex flex-col items-center p-6 rounded-lg border-2 transition-all ${
-                                            selectedFormat === 'bin'
+                                        className={`relative flex flex-col items-center p-6 rounded-lg border-2 transition-all ${selectedFormat === 'bin'
                                                 ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20 shadow-lg'
                                                 : 'border-gray-300 dark:border-gray-600 hover:border-orange-300'
-                                        }`}
+                                            }`}
                                         variants={cardVariants}
                                         whileHover={{ scale: 1.05, y: -2 }}
                                         whileTap={{ scale: 0.95 }}
@@ -303,13 +301,13 @@ export default function Index() {
                                     </motion.button>
                                 </motion.div>
                                 <p className="mt-3 text-sm text-gray-600 dark:text-gray-400 text-center">
-                                    💡 <span className="text-orange-600 font-medium">BIN</span>: File kompresi mentah (ukuran minimal) | 
+                                    💡 <span className="text-orange-600 font-medium">BIN</span>: File kompresi mentah (ukuran minimal) |
                                     <span className="text-teal-600 font-medium"> JPG</span>: Gambar hasil dekompresi (siap tampil)
                                 </p>
                             </div>
 
                             {error && (
-                                <motion.div 
+                                <motion.div
                                     initial={{ opacity: 0, y: -10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     className="mb-4 p-4 bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 border-2 border-red-300 dark:border-red-700 rounded-xl shadow-md"
@@ -362,9 +360,9 @@ export default function Index() {
                                 variants={containerVariants}
                                 className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
                             >
-                                <motion.div 
+                                <motion.div
                                     variants={cardVariants}
-                                    whileHover={{ y: -5, scale: 1.02 }} 
+                                    whileHover={{ y: -5, scale: 1.02 }}
                                     transition={{ type: "spring", stiffness: 300 }}
                                 >
                                     <StatsCard
@@ -379,16 +377,16 @@ export default function Index() {
                                         }
                                     />
                                 </motion.div>
-                                <motion.div 
+                                <motion.div
                                     variants={cardVariants}
-                                    whileHover={{ y: -5, scale: 1.02 }} 
+                                    whileHover={{ y: -5, scale: 1.02 }}
                                     transition={{ type: "spring", stiffness: 300 }}
                                 >
                                     <StatsCard
                                         title="File Kompres (.bin)"
                                         value={formatBytes(result.compressed_size)}
-                                        subtitle={result.file_compression_ratio > 0 
-                                            ? `Hemat ${result.file_compression_ratio.toFixed(2)}%` 
+                                        subtitle={result.file_compression_ratio > 0
+                                            ? `Hemat ${result.file_compression_ratio.toFixed(2)}%`
                                             : `Lebih besar ${Math.abs(result.file_compression_ratio).toFixed(2)}%`}
                                         color={result.file_compression_ratio > 0 ? "green" : "red"}
                                         icon={
@@ -398,9 +396,9 @@ export default function Index() {
                                         }
                                     />
                                 </motion.div>
-                                <motion.div 
+                                <motion.div
                                     variants={cardVariants}
-                                    whileHover={{ y: -5, scale: 1.02 }} 
+                                    whileHover={{ y: -5, scale: 1.02 }}
                                     transition={{ type: "spring", stiffness: 300 }}
                                 >
                                     <StatsCard
@@ -415,6 +413,25 @@ export default function Index() {
                                         }
                                     />
                                 </motion.div>
+                                <motion.div
+                                    variants={cardVariants}
+                                    whileHover={{ y: -5, scale: 1.02 }}
+                                    transition={{ type: "spring", stiffness: 300 }}
+                                >
+                                    <StatsCard
+                                        title="Bits Per Pixel (BPP)"
+                                        value={result.bits_per_pixel.toFixed(2)}
+                                        subtitle="Rata-rata bit per pixel"
+                                        color="purple"
+                                        icon={
+                                            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                                            </svg>
+                                        }
+                                    />
+                                </motion.div>
+
+
                             </motion.div>
 
                             {/* Algorithm Info */}
@@ -446,47 +463,7 @@ export default function Index() {
                                 </div>
                             </motion.div>
 
-                            {/* File Size Comparison Info */}
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: 0.25 }}
-                                className={`mb-6 p-4 rounded-lg border ${
-                                    result.file_compression_ratio > 0 
-                                        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                                        : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
-                                }`}
-                            >
-                                <p className={`text-sm ${
-                                    result.file_compression_ratio > 0 
-                                        ? 'text-green-800 dark:text-green-200'
-                                        : 'text-yellow-800 dark:text-yellow-200'
-                                }`}>
-                                    <strong>📊 Perbandingan File:</strong> File asli (JPG/PNG): <strong>{formatBytes(result.original_file_size)}</strong> → 
-                                    File compressed (.bin): <strong>{formatBytes(result.compressed_size)}</strong>
-                                    {result.file_compression_ratio > 0 ? (
-                                        <span className="text-green-600 dark:text-green-400 font-semibold"> (Hemat {result.file_compression_ratio.toFixed(2)}%)</span>
-                                    ) : (
-                                        <span className="text-red-600 dark:text-red-400 font-semibold"> (Lebih besar {Math.abs(result.file_compression_ratio).toFixed(2)}%)</span>
-                                    )}
-                                </p>
-                                
-                                <p className={`text-xs mt-2 ${
-                                    result.file_compression_ratio > 0 
-                                        ? 'text-green-600 dark:text-green-300'
-                                        : 'text-yellow-700 dark:text-yellow-300'
-                                }`}>
-                                    <strong>💡 Penjelasan:</strong> {result.file_compression_ratio > 0 ? (
-                                        <>JPEG Quality Reduction berhasil mengompresi gambar! Parameter kualitas mengontrol ukuran vs kualitas output.</>
-                                    ) : (
-                                        <>
-                                            File JPG sudah terkompresi dengan algoritma DCT yang sangat efisien. 
-                                            Hasil lebih besar karena re-encoding atau konversi format.<br/>
-                                            <strong>Gunakan gambar dengan kualitas tinggi untuk hasil kompresi optimal.</strong>
-                                        </>
-                                    )}
-                                </p>
-                            </motion.div>
+
 
                             {/* Download Button with File Info */}
                             <motion.div
@@ -512,7 +489,7 @@ export default function Index() {
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <a
                                     href={result.compressed_file_url}
                                     download={result.compressed_filename}
@@ -523,7 +500,7 @@ export default function Index() {
                                     </svg>
                                     Download File Kompres ({formatBytes(result.compressed_size)})
                                 </a>
-                                
+
                                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                                     💡 File .bin dapat didekompresi kembali menggunakan halaman Dekompresi
                                 </p>
